@@ -5,3 +5,4 @@
 # Web shell
 **/node_modules/
 **/dist/
+**/.next/

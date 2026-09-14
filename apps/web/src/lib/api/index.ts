@@ -1,5 +1,5 @@
-export { createHttpClient, defaultApiBase } from './client.ts'
-export { createMockClient } from './mock.ts'
+export { createHttpClient, defaultApiBase } from "./client";
+export { createMockClient } from "./mock";
 export {
   ShrimpApiError,
   type Agent,
@@ -11,4 +11,4 @@ export {
   type SearchRequest,
   type SearchResponse,
   type ShrimpClient,
-} from './types.ts'
+} from "./types";

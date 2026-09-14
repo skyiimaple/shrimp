@@ -4,23 +4,28 @@
 
 ## 开发
 
-需要本机 Node。runtime 可有可无：没有 runtime 时打开页面上的「本地 Mock」。
+需要本机 Node + pnpm。runtime 可有可无：没有 runtime 时打开页面上的「本地 Mock」。
 
 ```bash
 cd apps/web
-npm install   # 或 pnpm install
-npm run dev   # 或 pnpm dev
+pnpm install
+pnpm dev
 ```
 
-浏览器打开终端里打印的地址（默认 `http://localhost:5173`）。
+浏览器打开 `http://localhost:3001`（避开 compose `ui` 的 3000）。
 
 默认 API：`http://localhost:8080`。换 runtime 地址：
 
 ```bash
-VITE_API_BASE=http://localhost:8080 npm run dev
+NEXT_PUBLIC_API_BASE=http://localhost:8080 pnpm dev
 ```
 
-或复制 `.env.example` 为 `.env`。
+或复制 `.env.example` 为 `.env.local`。
+
+```bash
+pnpm lint
+pnpm build
+```
 
 ## 演示路径
 
@@ -29,8 +34,8 @@ VITE_API_BASE=http://localhost:8080 npm run dev
 3. 切换智能体：每个有独立 `conversation_id` 与消息列表。
 4. 发送一条消息 → `POST /agents/{id}/chat`（同步一轮）。
 
-Routines / search 只在 `src/api` 里有 client helper，本草图没有例行任务状态条。
+Routines / search 只在 `src/lib/api` 里有 client helper，本草图没有例行任务状态条。
 
 ## English
 
-Thin swappable chat shell (Vite + React). Native shrimp paths only, not `/v1`. Leave compose `ui` (Open WebUI) as-is. `npm install && npm run dev`; optional `VITE_API_BASE`; in-page **local mock** when runtime is down.
+Thin swappable chat shell (Next.js App Router). Native shrimp paths only, not `/v1`. Leave compose `ui` (Open WebUI) as-is. `pnpm install && pnpm dev`; optional `NEXT_PUBLIC_API_BASE`; in-page **local mock** when runtime is down.
