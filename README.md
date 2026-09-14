@@ -1,6 +1,6 @@
 # shrimp
 
-## 中文
+[中文](README.md) | [English](README.en.md)
 
 面向国内自托管的多 Agent：侧栏多机器人、cron 例行任务、数据私有本地。
 
@@ -11,17 +11,5 @@
 - [`docker-compose.yml`](./docker-compose.yml) — 编排
 - [`docs/openapi.yaml`](./docs/openapi.yaml) — HTTP 契约
 
-鉴权延后。mock / 真实 runtime 为后续 PR。`/v1` OpenAI 门面由 runtime 后续提供。
+鉴权延后。runtime 提供 mock 与 `/v1` OpenAI 门面（喂 Open WebUI）。
 
-## English
-
-China-focused self-host multi-agent: sidebar multi-bot, cron routines, private/local data.
-
-**First slice:** CreateAgent → chat → one cron → one tool (search).
-
-**Stack:** single-node Docker — `ui` (Open WebUI) → `runtime` → SQLite + host [`./data`](./data).
-
-- [`docker-compose.yml`](./docker-compose.yml) — compose
-- [`docs/openapi.yaml`](./docs/openapi.yaml) — HTTP contract
-
-Auth is deferred. Mock / real runtime is a follow-up PR. The `/v1` OpenAI facade is owned by runtime later.
