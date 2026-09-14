@@ -1,0 +1,3 @@
+# Host-persisted private data (SQLite, Open WebUI state)
+/data/*
+!/data/.gitkeep

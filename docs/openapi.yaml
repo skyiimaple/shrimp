@@ -1,0 +1,325 @@
+openapi: 3.0.3
+info:
+  title: Shrimp Runtime API
+  version: 0.1.0
+  description: >
+    HTTP contract for the single-node shrimp runtime.
+    Four resources: agents, chat, routines, and search.
+    This document is a skeleton only — no server is implemented in this slice.
+    Auth is deferred; operations are unauthenticated in v1.
+security: []
+servers:
+  - url: http://localhost:8080
+    description: Local single-node runtime (docker-compose)
+tags:
+  - name: Agents
+  - name: Routines
+  - name: Tools
+paths:
+  /agents:
+    get:
+      tags: [Agents]
+      operationId: listAgents
+      summary: List agents
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+    post:
+      tags: [Agents]
+      operationId: createAgent
+      summary: Create an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgent"
+      responses:
+        "201":
+          description: Created agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /agents/{id}:
+    get:
+      tags: [Agents]
+      operationId: getAgent
+      summary: Get an agent
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Agents]
+      operationId: deleteAgent
+      summary: Delete an agent
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /agents/{id}/chat:
+    post:
+      tags: [Agents]
+      operationId: chatWithAgent
+      summary: Synchronous chat turn
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatTurnRequest"
+      responses:
+        "200":
+          description: Assistant reply for this turn
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatTurnResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /routines:
+    get:
+      tags: [Routines]
+      operationId: listRoutines
+      summary: List routines
+      responses:
+        "200":
+          description: Routine list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Routine"
+    post:
+      tags: [Routines]
+      operationId: createRoutine
+      summary: Create a routine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoutine"
+      responses:
+        "201":
+          description: Created routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /routines/{id}:
+    get:
+      tags: [Routines]
+      operationId: getRoutine
+      summary: Get a routine
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Routines]
+      operationId: deleteRoutine
+      summary: Delete a routine
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /tools/search:
+    post:
+      tags: [Tools]
+      operationId: search
+      summary: Web search (only tool in v1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Agent:
+      type: object
+      required: [id, name, persona]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        persona:
+          type: string
+
+    CreateAgent:
+      type: object
+      required: [name, persona]
+      properties:
+        name:
+          type: string
+        persona:
+          type: string
+
+    ChatTurnRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        conversation_id:
+          type: string
+          description: Omit to start a new conversation.
+
+    ChatTurnResponse:
+      type: object
+      required: [conversation_id, message]
+      properties:
+        conversation_id:
+          type: string
+        message:
+          type: string
+          description: Assistant reply for this synchronous turn.
+
+    Routine:
+      type: object
+      required:
+        - id
+        - agent_id
+        - cron
+        - prompt
+        - status
+        - last_run_at
+        - last_error
+      properties:
+        id:
+          type: string
+        agent_id:
+          type: string
+        cron:
+          type: string
+        prompt:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, idle, error]
+        last_run_at:
+          type: string
+          nullable: true
+        last_error:
+          type: string
+          nullable: true
+
+    CreateRoutine:
+      type: object
+      required: [agent_id, cron, prompt]
+      properties:
+        agent_id:
+          type: string
+        cron:
+          type: string
+        prompt:
+          type: string
+
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+
+    SearchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+
+    SearchResult:
+      type: object
+      required: [title, url]
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        snippet:
+          type: string
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
