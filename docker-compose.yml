@@ -1,0 +1,37 @@
+# Single-node self-host skeleton for shrimp.
+# Private data stays on the host bind ./data. Auth is deferred (no auth config).
+# Postgres is an optional later alternative — do not add a Postgres service in v1.
+
+services:
+  ui:
+    # Official Open WebUI shell; wired to the future runtime HTTP API.
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    environment:
+      OPENAI_API_BASE_URL: http://runtime:8080/v1
+      OPENAI_API_KEY: unused
+    volumes:
+      - ./data/open-webui:/app/backend/data
+    depends_on:
+      - runtime
+
+  runtime:
+    # Placeholder only. Later this service serves shrimp-runtime HTTP on :8080
+    # (see docs/openapi.yaml). Do not implement the API server in this slice.
+    image: alpine:3.20
+    command: ["sleep", "infinity"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - db
+
+  db:
+    # Default store is SQLite files on the host bind ./data.
+    # Optional later: Postgres (comment only — no Postgres service in v1).
+    image: alpine:3.20
+    command: ["sleep", "infinity"]
+    volumes:
+      - ./data/sqlite:/data
