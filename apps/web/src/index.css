@@ -1,0 +1,302 @@
+:root {
+  color-scheme: dark;
+  --bg: #111318;
+  --sidebar: #16181d;
+  --panel: #1c1f26;
+  --border: #2a2d35;
+  --text: #e8eaed;
+  --muted: #8b909a;
+  --accent: #e07a3d;
+  --accent-dim: #3a2418;
+  --user: #243044;
+  --danger: #f07178;
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.shell {
+  display: flex;
+  height: 100%;
+}
+
+.sidebar {
+  width: 272px;
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.brand {
+  padding: 16px 16px 8px;
+}
+
+.brand strong {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+
+.mock-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 12px 12px;
+  padding: 8px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mock-toggle.on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: #f3d2bc;
+}
+
+.mock-toggle input {
+  margin-top: 2px;
+}
+
+.folder {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+
+.folder-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.icon-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.create {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px 10px;
+}
+
+.create input,
+.create textarea,
+.composer input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.create textarea {
+  resize: vertical;
+}
+
+.create button,
+.composer button {
+  background: var(--accent);
+  color: #1a1008;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create button:disabled,
+.composer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.agent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.agent:hover {
+  background: #1e222b;
+}
+
+.agent.active {
+  background: var(--accent-dim);
+}
+
+.agent-name {
+  font-size: 14px;
+}
+
+.agent-persona {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.pad {
+  padding: 8px 16px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.side-foot {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.chat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.conv-id {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--panel);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.log {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  margin: auto;
+}
+
+.empty-main {
+  margin: auto;
+}
+
+.bubble {
+  max-width: 720px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.bubble .role {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: var(--user);
+}
+
+.bubble.assistant {
+  align-self: flex-start;
+  background: var(--panel);
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.composer input {
+  flex: 1;
+}
