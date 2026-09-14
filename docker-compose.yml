@@ -17,10 +17,9 @@ services:
       - runtime
 
   runtime:
-    # Placeholder only. Later this service serves shrimp-runtime HTTP on :8080
-    # (see docs/openapi.yaml). Do not implement the API server in this slice.
-    image: alpine:3.20
-    command: ["sleep", "infinity"]
+    # In-memory mock of docs/openapi.yaml plus a thin OpenAI /v1 facade.
+    # Listens on :8080. No real LLM, cron, outbound search, or auth.
+    build: ./runtime
     ports:
       - "8080:8080"
     volumes:

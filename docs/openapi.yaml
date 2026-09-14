@@ -5,7 +5,7 @@ info:
   description: >
     HTTP contract for the single-node shrimp runtime.
     Four resources: agents, chat, routines, and search.
-    This document is a skeleton only — no server is implemented in this slice.
+    Implemented by the in-memory mock in ./runtime (no real LLM / cron / outbound search).
     Auth is deferred; operations are unauthenticated in v1.
 security: []
 servers:
@@ -16,6 +16,13 @@ tags:
   - name: Routines
   - name: Tools
 paths:
+  /health:
+    get:
+      operationId: health
+      summary: Liveness
+      responses:
+        "200":
+          description: Runtime is up
   /agents:
     get:
       tags: [Agents]
