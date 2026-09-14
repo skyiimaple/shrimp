@@ -6,6 +6,8 @@ info:
     HTTP contract for the single-node shrimp runtime.
     Four resources: agents, chat, routines, and search.
     This document is a skeleton only — no server is implemented in this slice.
+    Auth is deferred; operations are unauthenticated in v1.
+security: []
 servers:
   - url: http://localhost:8080
     description: Local single-node runtime (docker-compose)
