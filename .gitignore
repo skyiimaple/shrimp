@@ -1,0 +1,14 @@
+.worktrees/
+.superpowers/
+
+# Frontend
+node_modules/
+dist/
+.vite/
+
+# Backend
+target/
+
+# Local settings
+.env
+.DS_Store
