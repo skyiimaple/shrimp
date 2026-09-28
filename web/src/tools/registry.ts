@@ -1,5 +1,6 @@
-import { Braces, CalendarClock, Clock3, Fingerprint, Globe2, KeyRound, Regex, ShieldCheck, WholeWord } from 'lucide-react'
+import { Braces, CalendarClock, Clock3, FileText, Fingerprint, Globe2, KeyRound, Regex, ShieldCheck, WholeWord } from 'lucide-react'
 import { Base64Tool, CronTool, HashTool, HttpTool, JsonTool, JwtTool, RegexTool, TimestampTool, UuidTool } from './components/tool-panels'
+import { WeeklyReportTool } from './components/weekly-report-tool'
 import type { ToolCategory, ToolDefinition } from './types'
 export const tools: ToolDefinition[] = [
   { name: 'JSON', slug: 'json', path: '/tools/json', category: '数据处理', keywords: ['格式化', '压缩', '校验'], description: '格式化、压缩并校验 JSON 数据。', icon: Braces, component: JsonTool },
@@ -10,6 +11,7 @@ export const tools: ToolDefinition[] = [
   { name: 'UUID', slug: 'uuid', path: '/tools/uuid', category: '开发辅助', keywords: ['v4', '随机', '标识符'], description: '使用安全随机源批量生成 UUID v4。', icon: KeyRound, component: UuidTool },
   { name: 'Cron', slug: 'cron', path: '/tools/cron', category: '开发辅助', keywords: ['定时', '计划任务', '五段'], description: '解析标准五段 Cron，并查看后续运行时间。', icon: CalendarClock, component: CronTool },
   { name: '正则表达式', slug: 'regex', path: '/tools/regex', category: '开发辅助', keywords: ['匹配', '捕获组', 'flags'], description: '测试 JavaScript 正则并检查匹配与捕获组。', icon: Regex, component: RegexTool },
+  { name: '周报生成', slug: 'weekly-report', path: '/tools/weekly-report', category: '开发辅助', keywords: ['周报', '团队', '项目汇总', '表格'], description: '把表格数据整理成团队与个人周报。', icon: FileText, component: WeeklyReportTool },
   { name: 'HTTP 请求', slug: 'http', path: '/tools/http', category: '网络工具', keywords: ['API', 'REST', '代理'], description: '通过受保护的本地代理发送 HTTP 请求。', icon: Globe2, component: HttpTool },
 ]
 export const findTool = (slug: string) => tools.find((tool) => tool.slug === slug)
