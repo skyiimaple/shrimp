@@ -4,6 +4,17 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          tanstack: ['@tanstack/react-query', '@tanstack/react-router'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+  },
   server: { proxy: { '/api': 'http://127.0.0.1:8080' } },
   test: {
     environment: 'jsdom',

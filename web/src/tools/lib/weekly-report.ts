@@ -41,13 +41,18 @@ const fields: Array<{ key: keyof WeeklyItem; label: string; required: boolean }>
 ]
 
 export function parseWeeklyRows(input: string): Result<WeeklyItem[]> {
-  const rows = input.split(/\r?\n/).filter((row) => row.trim())
+  const rows = input.split(/\r?\n/).map((text, index) => ({ text, lineNumber: index + 1 })).filter((row) => row.text.trim())
   if (!rows.length) return { ok: false, error: '请粘贴周报表格数据' }
   const values: WeeklyItem[] = []
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    const cells = rows[rowIndex].split('\t').map((cell) => cell.trim())
+    const { text, lineNumber } = rows[rowIndex]
+    const cells = text.split('\t').map((cell) => cell.trim())
     const missing = fields.filter((field, index) => field.required && !cells[index]).map((field) => field.label)
-    if (missing.length) return { ok: false, error: `第 ${rowIndex + 1} 行缺少必填字段：${missing.join('、')}` }
+    if (missing.length) return { ok: false, error: `第 ${lineNumber} 行缺少必填字段：${missing.join('、')}` }
+    for (const [index, label] of [[6, '预计消耗时间'], [7, '已投入时间']] as const) {
+      if (!/^\d+(?:\.\d+)?$/.test(cells[index])) return { ok: false, error: `第 ${lineNumber} 行“${label}”必须是非负数字` }
+    }
+    if (!/^\d+(?:\.\d+)?%?$/.test(cells[8]) || Number(cells[8].replace('%', '')) > 100) return { ok: false, error: `第 ${lineNumber} 行“进度”必须是 0 到 100 的百分比` }
     values.push(Object.fromEntries(fields.map((field, index) => [field.key, cells[index] ?? ''])) as unknown as WeeklyItem)
   }
   return { ok: true, value: values }
@@ -104,8 +109,11 @@ function weeklySummary(list: WeeklyItem[], selectedProducts: string[]) {
 export function generateWeeklyReport(list: WeeklyItem[], selectedProducts: string[], selectedMembers: string[]): Result<string> {
   if (!selectedProducts.length) return { ok: false, error: '请选择产品项目' }
   if (!selectedMembers.length) return { ok: false, error: '请添加并选择团队成员' }
+  const unmatched = selectedMembers.filter((member) => !list.some((item) => item.person === member))
+  if (unmatched.length) return { ok: false, error: `未找到负责人完全匹配的成员：${unmatched.join('、')}` }
   let result = ''
-  if (selectedMembers.length > 1) result += `----------\n业财前端部：\n${weeklySummary(list, selectedProducts)}\n`
+  const selectedRows = list.filter((item) => selectedMembers.includes(item.person))
+  if (selectedMembers.length > 1) result += `----------\n业财前端部：\n${weeklySummary(selectedRows, selectedProducts)}\n`
   for (const member of selectedMembers) {
     result += `\n----------\n${member}：\n${weeklySummary(list.filter((item) => item.person === member), selectedProducts)}\n`
   }

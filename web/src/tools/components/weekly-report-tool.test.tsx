@@ -33,4 +33,17 @@ describe('周报生成工具', () => {
     await user.click(screen.getByRole('button', { name: '生成周报' }))
     expect(screen.getByRole('alert')).toHaveTextContent('请添加并选择团队成员')
   })
+
+  it('重新生成失败时清空旧结果，避免复制过期周报', async () => {
+    const user = userEvent.setup()
+    render(<WeeklyReportTool />)
+    await user.type(screen.getByLabelText('成员姓名'), '张三{Enter}')
+    fireEvent.change(screen.getByLabelText('表格数据'), { target: { value: row } })
+    await user.click(screen.getByRole('button', { name: '生成周报' }))
+    expect(screen.getByLabelText('周报结果')).not.toHaveValue('')
+    fireEvent.change(screen.getByLabelText('表格数据'), { target: { value: 'CRM\t1.2.0' } })
+    await user.click(screen.getByRole('button', { name: '生成周报' }))
+    expect(screen.getByLabelText('周报结果')).toHaveValue('')
+    expect(screen.queryByRole('button', { name: '复制周报' })).not.toBeInTheDocument()
+  })
 })

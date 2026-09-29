@@ -4,12 +4,15 @@
 
 ## 目录结构
 
+前后端分开构建，各自有说明：[web/README.md](web/README.md)、[server/README.md](server/README.md)。
+
 ```text
-web/       React 19 + Vite + TypeScript + Tailwind CSS 4，包管理器为 pnpm
-           路由与请求使用 TanStack Router、TanStack Query
-server/    Spring Boot 3 + Java 21，构建入口是 Gradle Wrapper（server/gradlew）
-docs/superpowers/specs/    设计规格
-docs/superpowers/plans/    实施计划
+shrimp/
+  README.md                         本文件：怎么在本机把两边跑起来
+  web/                              浏览器里的工具箱界面
+  server/                           只监听 127.0.0.1 的 HTTP 代理
+  docs/superpowers/specs/           设计规格
+  docs/superpowers/plans/           实施计划
 ```
 
 前后端分开构建。收藏和主题只保存在浏览器 `localStorage`。
