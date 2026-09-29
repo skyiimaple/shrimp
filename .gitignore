@@ -12,3 +12,7 @@ target/
 # Local settings
 .env
 .DS_Store
+.pnpm-store/
+
+.cursor/
+.vscode/
