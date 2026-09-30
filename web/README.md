@@ -18,7 +18,13 @@ pnpm install
 pnpm dev
 ```
 
-开发服务器默认在 <http://localhost:5173>。`vite.config.ts` 把普通 `/api` 请求代理到 `http://127.0.0.1:8080`；`/api/jev/evaluate` 则由本目录的 `local-proxy.ts` 固定转发到 TypeSafe API。`pnpm build && pnpm preview` 同样提供 Jev 转发；若将 `dist/` 单独放到静态服务器，需由部署端提供该同源接口。
+开发服务器默认在 <http://localhost:5173>。`vite.config.ts` 把普通 `/api` 请求代理到 `http://127.0.0.1:8080`；`/api/jev/evaluate` 则由本目录的 `local-proxy.ts` 固定转发到 TypeSafe API。`pnpm build && pnpm exec vite preview` 同样提供 Jev 转发。
+
+## 部署到 Vercel
+
+导入仓库时，将项目的 **Root Directory** 设为 `web`。本目录的 `vercel.json` 指定 Vite 构建、`dist` 输出和单页应用路由；`api/jev/evaluate.ts` 会作为 Vercel Function 提供同源的 Jev 接口。前端调用地址与本地开发一致，不需要 Java 服务或 API Key 环境变量；用户在浏览器输入自己的 Key。
+
+`HTTP 请求` 工具仍依赖单独的 Java 后端，当前 Vercel 配置只承接 Jev。若将 `dist/` 放到 Vercel 以外的纯静态服务器，仍需由该部署环境提供 `/api/jev/evaluate` 同源接口。
 
 ## 常用命令
 
@@ -37,6 +43,8 @@ web/
   pnpm-lock.yaml                  锁定依赖版本
   vite.config.ts                  Tailwind、/api 开发代理、Vitest
   local-proxy.ts                  Jev 专用本地转发，固定上游且不跟随重定向
+  vercel.json                     Vercel Vite 构建和单页应用路由
+  api/jev/evaluate.ts             Vercel 上的 Jev Function
   tsconfig.json                   TypeScript 工程引用
   tsconfig.app.json               应用的 TypeScript 编译选项
   components.json                 shadcn/ui 的样式和别名约定

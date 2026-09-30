@@ -40,6 +40,62 @@ async function readResponse(response: Response): Promise<string> {
   return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString('utf8');
 }
 
+export function isRequestTooLarge(body: unknown, contentLength?: string): boolean {
+  if (contentLength && Number(contentLength) > MAX_REQUEST_BYTES) return true;
+  const serialized = JSON.stringify(body);
+  return serialized !== undefined && Buffer.byteLength(serialized) > MAX_REQUEST_BYTES;
+}
+
+export async function forwardJevRequest(
+  body: unknown,
+  authorization: string | undefined,
+  fetchUpstream: typeof fetch = fetch,
+  endpoint = JEV_ENDPOINT,
+): Promise<{ status: number; body: string }> {
+  const result = (status: number, message: string) => ({
+    status,
+    body: JSON.stringify({ message }),
+  });
+  if (!authorization?.startsWith('Bearer ') || !authorization.slice(7).trim())
+    return result(400, '请输入 TypeSafe API Key');
+  if (
+    !body ||
+    typeof body !== 'object' ||
+    Array.isArray(body) ||
+    !('state' in body) ||
+    !('questions' in body) ||
+    !body.questions ||
+    typeof body.questions !== 'object' ||
+    Array.isArray(body.questions)
+  )
+    return result(400, 'Jev 请求结构无效');
+  const state = body.state;
+  if (typeof state !== 'string' && (!state || typeof state !== 'object'))
+    return result(400, 'state 格式无效');
+  try {
+    const upstream = await fetchUpstream(endpoint, {
+      method: 'POST',
+      redirect: 'manual',
+      headers: { Authorization: authorization, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'jev-latest', state, questions: body.questions }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (upstream.status >= 300 && upstream.status < 400)
+      return result(502, 'Jev 上游返回重定向，已停止请求');
+    return {
+      status: upstream.status,
+      body: (await readResponse(upstream)).split(authorization.slice(7)).join('<redacted>'),
+    };
+  } catch (error) {
+    return result(
+      502,
+      error instanceof Error && error.message === 'RESPONSE_TOO_LARGE'
+        ? 'Jev 响应超过大小限制'
+        : '无法连接 Jev 服务',
+    );
+  }
+}
+
 export function createJevProxyHandler(
   fetchUpstream: typeof fetch = fetch,
   endpoint = JEV_ENDPOINT,
@@ -61,52 +117,19 @@ export function createJevProxyHandler(
         return;
       }
     }
-    const authorization = request.headers.authorization;
-    if (!authorization?.startsWith('Bearer ') || !authorization.slice(7).trim()) {
-      respond(response, 400, '请输入 TypeSafe API Key');
-      return;
-    }
     try {
       const body: unknown = JSON.parse(await readBody(request));
-      if (
-        !body ||
-        typeof body !== 'object' ||
-        Array.isArray(body) ||
-        !('state' in body) ||
-        !('questions' in body) ||
-        !body.questions ||
-        typeof body.questions !== 'object' ||
-        Array.isArray(body.questions)
-      ) {
-        respond(response, 400, 'Jev 请求结构无效');
-        return;
-      }
-      const state = body.state;
-      if (typeof state !== 'string' && (!state || typeof state !== 'object')) {
-        respond(response, 400, 'state 格式无效');
-        return;
-      }
-      const upstream = await fetchUpstream(endpoint, {
-        method: 'POST',
-        redirect: 'manual',
-        headers: { Authorization: authorization, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'jev-latest', state, questions: body.questions }),
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (upstream.status >= 300 && upstream.status < 400) {
-        respond(response, 502, 'Jev 上游返回重定向，已停止请求');
-        return;
-      }
-      const result = (await readResponse(upstream))
-        .split(authorization.slice(7))
-        .join('<redacted>');
-      response.writeHead(upstream.status, { 'Content-Type': 'application/json; charset=utf-8' });
-      response.end(result);
+      const result = await forwardJevRequest(
+        body,
+        request.headers.authorization,
+        fetchUpstream,
+        endpoint,
+      );
+      response.writeHead(result.status, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(result.body);
     } catch (error) {
       if (error instanceof Error && error.message === 'REQUEST_TOO_LARGE') {
         respond(response, 413, '请求内容超过大小限制');
-      } else if (error instanceof Error && error.message === 'RESPONSE_TOO_LARGE') {
-        respond(response, 502, 'Jev 响应超过大小限制');
       } else if (error instanceof SyntaxError) {
         respond(response, 400, '请求 JSON 格式无效');
       } else {
