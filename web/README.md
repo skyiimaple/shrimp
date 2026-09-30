@@ -66,6 +66,8 @@ web/
         structured-data.ts       YAML、JSON、TOML 转换
         encoding.ts              URL 与整数进制转换
         text-processing.ts       大小写与列表处理
+        markdown.ts sql.ts        安全 Markdown 与 SQL 排版
+        password.ts color.ts user-agent.ts  密码、颜色与 UA 处理
         weekly-report.ts
         result.ts                 成功或错误的统一返回
       components/
@@ -73,6 +75,7 @@ web/
         structured-data-tool-panels.tsx  YAML/JSON、JSON/TOML 面板
         text-tool-panels.tsx      URL、大小写、列表面板
         developer-tool-panels.tsx 进制转换面板
+        second-batch-tool-panels.tsx  Markdown、SQL、密码、颜色、UA 面板
         weekly-report-tool.tsx    周报面板：选产品、选成员、粘贴表格
     test/
       setup.ts                    Vitest 的 jsdom 环境
@@ -84,10 +87,12 @@ web/
 
 | 分类     | 工具                                                   |
 | -------- | ------------------------------------------------------ |
-| 数据处理 | JSON、YAML ⇄ JSON、JSON ⇄ TOML、文本大小写、列表处理、文本哈希 |
+| 数据处理 | JSON、YAML ⇄ JSON、JSON ⇄ TOML、文本大小写、列表处理、文本哈希、Markdown 转 HTML、颜色转换 |
 | 编码转换 | Base64、URL 编解码、进制转换、JWT 解码（只看 Header 与 Payload，不验证签名） |
 | 日期时间 | 时间戳                                                 |
-| 开发辅助 | UUID、Cron、正则表达式、周报生成                       |
-| 网络工具 | HTTP 请求                                              |
+| 开发辅助 | UUID、Cron、正则表达式、周报生成、SQL 格式化、密码生成 |
+| 网络工具 | HTTP 请求、User-Agent 解析                            |
 
 周报生成读取制表符分隔的表格行，按所选产品和成员整理团队与个人周报。HTTP 请求调用 `POST /api/http/send`；后端未启动时页面会提示无法连接本地代理。
+
+Markdown 工具先清理危险 HTML，再展示生成的 HTML 与预览。SQL 工具只排版文本，不连接数据库或执行语句。密码工具通过浏览器安全随机源生成，也支持手动输入并分析强度；密码不会写入本地存储或发送给服务端。

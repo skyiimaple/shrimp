@@ -17,7 +17,7 @@ shrimp/
 
 前后端分开构建。收藏和主题只保存在浏览器 `localStorage`。
 
-当前前端工具：JSON、Base64、JWT 解码、文本哈希、时间戳、UUID、Cron、正则表达式，以及 HTTP 请求。
+当前前端工具：JSON、YAML ⇄ JSON、JSON ⇄ TOML、Base64、URL 编解码、文本大小写、列表处理、进制转换、JWT 解码、文本哈希、时间戳、UUID、Cron、正则表达式、周报生成、Markdown 转 HTML、SQL 格式化、密码生成、颜色转换、User-Agent 解析，以及 HTTP 请求。
 
 ## 环境要求
 

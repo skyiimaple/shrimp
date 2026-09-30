@@ -3,8 +3,8 @@ import { groupToolsByCategory, searchTools, tools } from './registry';
 
 describe('工具注册表', () => {
   it('slug 与路径唯一并保持对应', () => {
-    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(16);
-    expect(new Set(tools.map((tool) => tool.path)).size).toBe(16);
+    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(21);
+    expect(new Set(tools.map((tool) => tool.path)).size).toBe(21);
     expect(tools.every((tool) => tool.path === `/tools/${tool.slug}`)).toBe(true);
   });
   it('按名称、关键词、分类和简介检索', () => {
@@ -17,6 +17,11 @@ describe('工具注册表', () => {
     expect(searchTools('查询参数').map((tool) => tool.slug)).toContain('url');
     expect(searchTools('去重').map((tool) => tool.slug)).toContain('list');
     expect(searchTools('十六进制').map((tool) => tool.slug)).toContain('radix');
+    expect(searchTools('Markdown').map((tool) => tool.slug)).toContain('markdown');
+    expect(searchTools('SQL').map((tool) => tool.slug)).toContain('sql');
+    expect(searchTools('密码').map((tool) => tool.slug)).toContain('password');
+    expect(searchTools('HEX').map((tool) => tool.slug)).toContain('color');
+    expect(searchTools('User-Agent').map((tool) => tool.slug)).toContain('user-agent');
   });
   it('按注册顺序分组', () => {
     expect(groupToolsByCategory(tools).get('网络工具')?.[0].slug).toBe('http');

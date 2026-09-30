@@ -4,6 +4,7 @@ import {
   CaseSensitive,
   CalendarClock,
   Clock3,
+  Database,
   FileCode2,
   FileJson,
   FileText,
@@ -12,11 +13,21 @@ import {
   KeyRound,
   Link2,
   ListFilter,
+  LockKeyhole,
+  MonitorSmartphone,
+  Palette,
   Regex,
   ShieldCheck,
   WholeWord,
 } from 'lucide-react';
 import { RadixTool } from './components/developer-tool-panels';
+import {
+  ColorTool,
+  MarkdownTool,
+  PasswordTool,
+  SqlTool,
+  UserAgentTool,
+} from './components/second-batch-tool-panels';
 import { JsonTomlTool, YamlJsonTool } from './components/structured-data-tool-panels';
 import { ListTool, TextCaseTool, UrlTool } from './components/text-tool-panels';
 import {
@@ -184,6 +195,46 @@ export const tools: ToolDefinition[] = [
     component: WeeklyReportTool,
   },
   {
+    name: 'Markdown 转 HTML',
+    slug: 'markdown',
+    path: '/tools/markdown',
+    category: '数据处理',
+    keywords: ['Markdown', 'HTML', '安全预览'],
+    description: '转换 Markdown，并查看清理后的 HTML 与安全预览。',
+    icon: FileText,
+    component: MarkdownTool,
+  },
+  {
+    name: 'SQL 格式化',
+    slug: 'sql',
+    path: '/tools/sql',
+    category: '开发辅助',
+    keywords: ['SQL', '查询', '排版', '缩进'],
+    description: '排版 SQL 语句，不执行查询。',
+    icon: Database,
+    component: SqlTool,
+  },
+  {
+    name: '密码生成',
+    slug: 'password',
+    path: '/tools/password',
+    category: '开发辅助',
+    keywords: ['密码', '随机', '强度'],
+    description: '使用安全随机源生成密码并分析强度。',
+    icon: LockKeyhole,
+    component: PasswordTool,
+  },
+  {
+    name: '颜色转换',
+    slug: 'color',
+    path: '/tools/color',
+    category: '数据处理',
+    keywords: ['颜色', 'HEX', 'RGB', 'HSL'],
+    description: '转换 HEX、RGB 和 HSL，预览并复制结果。',
+    icon: Palette,
+    component: ColorTool,
+  },
+  {
     name: 'HTTP 请求',
     slug: 'http',
     path: '/tools/http',
@@ -192,6 +243,16 @@ export const tools: ToolDefinition[] = [
     description: '通过受保护的本地代理发送 HTTP 请求。',
     icon: Globe2,
     component: HttpTool,
+  },
+  {
+    name: 'User-Agent 解析',
+    slug: 'user-agent',
+    path: '/tools/user-agent',
+    category: '网络工具',
+    keywords: ['User-Agent', 'UA', '浏览器', '设备', '系统'],
+    description: '从 User-Agent 文本识别浏览器、系统和设备。',
+    icon: MonitorSmartphone,
+    component: UserAgentTool,
   },
 ];
 export const findTool = (slug: string) => tools.find((tool) => tool.slug === slug);
