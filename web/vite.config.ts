@@ -11,6 +11,7 @@ export default defineConfig({
           react: ['react', 'react-dom'],
           tanstack: ['@tanstack/react-query', '@tanstack/react-router'],
           icons: ['lucide-react'],
+          structuredData: ['yaml', 'smol-toml'],
         },
       },
     },

@@ -40,7 +40,7 @@ export function ToolPage() {
           <div>
             <p>{tool.category}</p>
             <h1>{tool.name}</h1>
-            <span>{tool.description}</span>
+            <span className="tool-summary">{tool.description}</span>
           </div>
         </div>
         <Button

@@ -60,13 +60,19 @@ web/
     tools/
       registry.ts                 工具名称、分类、关键词、图标和面板组件
       types.ts                    ToolDefinition 等类型
-      lib/                        不依赖界面的转换函数，一种工具一个文件
+      lib/                        不依赖界面的转换函数，按领域拆分
         json.ts base64.ts jwt.ts hash.ts
         timestamp.ts uuid.ts cron.ts regex.ts
+        structured-data.ts       YAML、JSON、TOML 转换
+        encoding.ts              URL 与整数进制转换
+        text-processing.ts       大小写与列表处理
         weekly-report.ts
         result.ts                 成功或错误的统一返回
       components/
         tool-panels.tsx           JSON、编解码、哈希、时间、UUID、Cron、正则、HTTP 的面板
+        structured-data-tool-panels.tsx  YAML/JSON、JSON/TOML 面板
+        text-tool-panels.tsx      URL、大小写、列表面板
+        developer-tool-panels.tsx 进制转换面板
         weekly-report-tool.tsx    周报面板：选产品、选成员、粘贴表格
     test/
       setup.ts                    Vitest 的 jsdom 环境
@@ -78,8 +84,8 @@ web/
 
 | 分类     | 工具                                                   |
 | -------- | ------------------------------------------------------ |
-| 数据处理 | JSON、文本哈希                                         |
-| 编码转换 | Base64、JWT 解码（只看 Header 与 Payload，不验证签名） |
+| 数据处理 | JSON、YAML ⇄ JSON、JSON ⇄ TOML、文本大小写、列表处理、文本哈希 |
+| 编码转换 | Base64、URL 编解码、进制转换、JWT 解码（只看 Header 与 Payload，不验证签名） |
 | 日期时间 | 时间戳                                                 |
 | 开发辅助 | UUID、Cron、正则表达式、周报生成                       |
 | 网络工具 | HTTP 请求                                              |
