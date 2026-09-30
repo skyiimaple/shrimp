@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { forwardJevRequest, isRequestTooLarge } from '../../local-proxy';
+// Vercel 按 Node ESM 原样执行编译后的 .js，不会补扩展名。这里必须指向产物 local-proxy.js。
+import { forwardJevRequest, isRequestTooLarge } from '../../local-proxy.js';
 
 type VercelRequest = IncomingMessage & { body?: unknown };
 

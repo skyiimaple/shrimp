@@ -1,8 +1,17 @@
 // @vitest-environment node
+import { spawn } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer, request as httpRequest } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { execPath } from 'node:process';
+import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import handler from './api/jev/evaluate';
+
+const webRoot = dirname(fileURLToPath(import.meta.url));
 
 const servers: Array<ReturnType<typeof createServer>> = [];
 
@@ -54,7 +63,51 @@ async function callFunction(body: string, authorization?: string) {
   });
 }
 
+function transpileForNodeEsm(source: string, fileName: string): string {
+  const { outputText } = ts.transpileModule(source, {
+    fileName,
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+  });
+  return outputText;
+}
+
 describe('Vercel Jev Function', () => {
+  it('编译后的 ESM 能解析 local-proxy.js', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'jev-fn-'));
+    try {
+      await writeFile(join(root, 'package.json'), '{"type":"module"}\n');
+      for (const relativePath of ['local-proxy.ts', 'api/jev/evaluate.ts']) {
+        const source = await readFile(join(webRoot, relativePath), 'utf8');
+        const outputPath = join(root, relativePath.replace(/\.ts$/, '.js'));
+        await mkdir(dirname(outputPath), { recursive: true });
+        await writeFile(outputPath, transpileForNodeEsm(source, relativePath));
+      }
+      const emitted = await readFile(join(root, 'api/jev/evaluate.js'), 'utf8');
+      expect(emitted).toContain("from '../../local-proxy.js'");
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn(
+          execPath,
+          ['--input-type=module', '-e', "await import('./api/jev/evaluate.js')"],
+          { cwd: root },
+        );
+        let stderr = '';
+        child.stderr.on('data', (chunk: Buffer) => {
+          stderr += chunk.toString();
+        });
+        child.on('error', reject);
+        child.on('exit', (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(stderr || `node exited ${code}`));
+        });
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it('要求密钥并把有效请求转给固定上游', async () => {
     const upstream = vi
       .spyOn(globalThis, 'fetch')
