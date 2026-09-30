@@ -24,6 +24,8 @@ pnpm dev
 
 导入仓库时，将项目的 **Root Directory** 设为 `web`。本目录的 `vercel.json` 指定 Vite 构建、`dist` 输出和单页应用路由；`api/jev/evaluate.ts` 会作为 Vercel Function 提供同源的 Jev 接口。前端调用地址与本地开发一致，不需要 Java 服务或 API Key 环境变量；用户在浏览器输入自己的 Key。
 
+`web/package.json` 是 `"type": "module"`，Function 以 Node ESM 运行。`api/jev/evaluate.ts` 引用同目录外的 `local-proxy.ts` 时必须写成 `../../local-proxy.js`：Vercel 会把该文件编译成 `local-proxy.js` 并放进函数包，但不会改写 import 路径。省略 `.js` 时，运行时会报 `ERR_MODULE_NOT_FOUND`。
+
 `HTTP 请求` 工具仍依赖单独的 Java 后端，当前 Vercel 配置只承接 Jev。若将 `dist/` 放到 Vercel 以外的纯静态服务器，仍需由该部署环境提供 `/api/jev/evaluate` 同源接口。
 
 ## 常用命令
