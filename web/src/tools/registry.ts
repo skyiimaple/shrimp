@@ -9,6 +9,7 @@ import {
   FileJson,
   FileText,
   Fingerprint,
+  FlaskConical,
   Globe2,
   KeyRound,
   Link2,
@@ -20,6 +21,7 @@ import {
   ShieldCheck,
   WholeWord,
 } from 'lucide-react';
+import { JevTool } from '../features/jev/jev-tool';
 import { RadixTool } from './components/developer-tool-panels';
 import {
   ColorTool,
@@ -223,6 +225,16 @@ export const tools: ToolDefinition[] = [
     description: '使用安全随机源生成密码并分析强度。',
     icon: LockKeyhole,
     component: PasswordTool,
+  },
+  {
+    name: 'Jev 调用试炼场',
+    slug: 'jev',
+    path: '/tools/jev',
+    category: '开发辅助',
+    keywords: ['Jev', 'TypeSafe AI', 'Choice', 'Score', 'Noul', 'AI'],
+    description: '编辑结构化问题，调用 TypeSafe Jev 并查看概率与置信度。',
+    icon: FlaskConical,
+    component: JevTool,
   },
   {
     name: '颜色转换',

@@ -1,9 +1,22 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { createJevProxyHandler } from './local-proxy';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'jev-local-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/jev/evaluate', createJevProxyHandler());
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use('/api/jev/evaluate', createJevProxyHandler());
+      },
+    },
+  ],
   build: {
     rollupOptions: {
       output: {

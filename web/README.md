@@ -1,6 +1,6 @@
 # Shrimp Web
 
-Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览器内完成；HTTP 请求经本机 `server` 代理发出。收藏和主题只写在浏览器 `localStorage`，没有账户和云同步。
+Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览器内完成；HTTP 请求经本机 `server` 代理发出。Jev 试炼场通过本目录的 Vite 本地转发调用 TypeSafe AI。收藏、主题和 Jev API Key 写在当前浏览器的 `localStorage`，没有账户和云同步。
 
 技术栈：React 19、Vite 7、TypeScript、Tailwind CSS 4、TanStack Router、TanStack Query。包管理器是 pnpm。
 
@@ -9,7 +9,7 @@ Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览
 - Node.js 20.19+，或 22.12+。
 - pnpm 10。本目录 `package.json` 的 `packageManager` 为 `pnpm@10.17.1`。
 
-使用 HTTP 请求工具时，先在 `../server` 启动后端。其余工具不依赖后端。
+使用 HTTP 请求工具时，先在 `../server` 启动后端。Jev 工具使用 `web/` 内的 Vite 本地转发，不依赖 Java 服务。
 
 ## 本地启动
 
@@ -18,7 +18,7 @@ pnpm install
 pnpm dev
 ```
 
-开发服务器默认在 <http://localhost:5173>。`vite.config.ts` 把 `/api` 代理到 `http://127.0.0.1:8080`。
+开发服务器默认在 <http://localhost:5173>。`vite.config.ts` 把普通 `/api` 请求代理到 `http://127.0.0.1:8080`；`/api/jev/evaluate` 则由本目录的 `local-proxy.ts` 固定转发到 TypeSafe API。`pnpm build && pnpm preview` 同样提供 Jev 转发；若将 `dist/` 单独放到静态服务器，需由部署端提供该同源接口。
 
 ## 常用命令
 
@@ -36,6 +36,7 @@ web/
   package.json                    依赖与 pnpm 脚本
   pnpm-lock.yaml                  锁定依赖版本
   vite.config.ts                  Tailwind、/api 开发代理、Vitest
+  local-proxy.ts                  Jev 专用本地转发，固定上游且不跟随重定向
   tsconfig.json                   TypeScript 工程引用
   tsconfig.app.json               应用的 TypeScript 编译选项
   components.json                 shadcn/ui 的样式和别名约定
@@ -55,6 +56,7 @@ web/
       favorites/                  收藏集合，以及 localStorage 读写
       theme/                      浅色、深色或跟随系统，偏好存在本地
       http/                       浏览器里调用 POST /api/http/send
+      jev/                        Jev 密钥、请求编辑、客户端和试炼场界面
     lib/
       utils.ts                    合并 className、复制文本
     tools/
@@ -90,9 +92,11 @@ web/
 | 数据处理 | JSON、YAML ⇄ JSON、JSON ⇄ TOML、文本大小写、列表处理、文本哈希、Markdown 转 HTML、颜色转换 |
 | 编码转换 | Base64、URL 编解码、进制转换、JWT 解码（只看 Header 与 Payload，不验证签名） |
 | 日期时间 | 时间戳                                                 |
-| 开发辅助 | UUID、Cron、正则表达式、周报生成、SQL 格式化、密码生成 |
+| 开发辅助 | UUID、Cron、正则表达式、周报生成、SQL 格式化、密码生成、Jev 调用试炼场 |
 | 网络工具 | HTTP 请求、User-Agent 解析                            |
 
 周报生成读取制表符分隔的表格行，按所选产品和成员整理团队与个人周报。HTTP 请求调用 `POST /api/http/send`；后端未启动时页面会提示无法连接本地代理。
 
 Markdown 工具先清理危险 HTML，再展示生成的 HTML 与预览。SQL 工具只排版文本，不连接数据库或执行语句。密码工具通过浏览器安全随机源生成，也支持手动输入并分析强度；密码不会写入本地存储或发送给服务端。
+
+Jev 试炼场第一次打开时输入 API Key，随后可更换或清除。密钥以明文保存在当前浏览器的 `localStorage`，请求预览和结果中不包含密钥；调用时经本地转发发送至 TypeSafe AI。state 和问题内容也会发送至 TypeSafe AI。支持在一个请求中编辑多个 Noul、Choice、Score 问题，并展示答案、概率、置信度、用量和原始响应。
