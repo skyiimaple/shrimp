@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { createServer, request as httpRequest } from 'node:http';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
+import ts from 'typescript';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import handler from './api/jev/evaluate';
 
@@ -55,6 +58,25 @@ async function callFunction(body: string, authorization?: string) {
 }
 
 describe('Vercel Jev Function', () => {
+  it('编译后的入口可独立加载，不依赖部署包外的 TS 模块', () => {
+    const source = readFileSync(new URL('./api/jev/evaluate.ts', import.meta.url), 'utf8');
+    const output = ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const url = `data:text/javascript;base64,${Buffer.from(output).toString('base64')}`;
+    expect(() =>
+      execFileSync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `const entry = await import(${JSON.stringify(url)}); if (typeof entry.default !== 'function') process.exit(1);`,
+        ],
+        { stdio: 'pipe' },
+      ),
+    ).not.toThrow();
+  });
+
   it('要求密钥并把有效请求转给固定上游', async () => {
     const upstream = vi
       .spyOn(globalThis, 'fetch')
