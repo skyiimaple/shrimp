@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, ErrorBox, Field, Input, Select } from '../../components/ui';
+import { Button, Card, ErrorBox, Field, Input, OptionSelect } from '../../components/ui';
 import { convertRadix, type Radix } from '../lib/encoding';
 import { ToolResult } from './tool-panel-shared';
 
@@ -42,36 +42,28 @@ export function RadixTool() {
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="来源进制">
-            <Select
-              value={from}
-              onChange={(event) => {
-                setFrom(Number(event.target.value) as Radix);
+            <OptionSelect
+              aria-label="来源进制"
+              value={String(from)}
+              onValueChange={(value) => {
+                setFrom(Number(value) as Radix);
                 setOutput('');
                 setError('');
               }}
-            >
-              {options.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </Select>
+              options={options.map((item) => ({ value: String(item.value), label: item.label }))}
+            />
           </Field>
           <Field label="目标进制">
-            <Select
-              value={to}
-              onChange={(event) => {
-                setTo(Number(event.target.value) as Radix);
+            <OptionSelect
+              aria-label="目标进制"
+              value={String(to)}
+              onValueChange={(value) => {
+                setTo(Number(value) as Radix);
                 setOutput('');
                 setError('');
               }}
-            >
-              {options.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </Select>
+              options={options.map((item) => ({ value: String(item.value), label: item.label }))}
+            />
           </Field>
         </div>
         <Button onClick={run}>转换进制</Button>

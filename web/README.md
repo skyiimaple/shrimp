@@ -1,6 +1,6 @@
 # Shrimp Web
 
-Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览器内完成；HTTP 请求经本机 `server` 代理发出。Jev 试炼场通过本目录的 Vite 本地转发调用 TypeSafe AI。收藏、主题和 Jev API Key 写在当前浏览器的 `localStorage`，没有账户和云同步。
+Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览器内完成；HTTP 请求经本机 `server` 代理发出。Jev 试炼场通过本目录的 Vite 本地转发调用 TypeSafe AI。顶部栏的 Agent 聊天由浏览器直连 DeepSeek 或 GLM；收藏、主题、模型 API Key 等设置写在当前浏览器的 `localStorage`，唯一一份聊天记录写在 IndexedDB，没有账户和云同步。
 
 技术栈：React 19、Vite 7、TypeScript、Tailwind CSS 4、TanStack Router、TanStack Query。包管理器是 pnpm。
 
@@ -10,6 +10,10 @@ Shrimp 工具箱的前端。JSON、编解码、哈希、周报等工具在浏览
 - pnpm 10。本目录 `package.json` 的 `packageManager` 为 `pnpm@10.17.1`。
 
 使用 HTTP 请求工具时，先在 `../server` 启动后端。Jev 工具使用 `web/` 内的 Vite 本地转发，不依赖 Java 服务。
+
+Agent 聊天也不依赖 Java 服务：在顶部栏打开弹窗，选择 DeepSeek 或 GLM，输入自己在对应平台申请的 API Key。Key 以明文保存在当前浏览器的 `localStorage`，只会随请求发送给所选模型服务；请仅在可信设备使用。聊天历史在同一浏览器中持续保留，除非手动确认清空或清除浏览器数据。清空聊天不会删除 Key；在设置中可单独删除当前服务商 Key。模型每轮只接收近期消息，不能依赖它记住全部旧记录。
+
+第一版 Agent 仅能调用 JSON、Base64、时间戳、UUID、正则五项浏览器本地工具，不会调用 HTTP 代理或执行模型生成的代码。浏览器直连依赖模型平台的跨域策略；若出现网络或跨域错误，请检查浏览器开发者工具。`web/.env` 不会给聊天功能自动注入 Key，用户需在界面输入。
 
 ## 本地启动
 
@@ -65,6 +69,7 @@ web/
       theme/                      浅色、深色或跟随系统，偏好存在本地
       http/                       浏览器里调用 POST /api/http/send
       jev/                        Jev 密钥、请求编辑、客户端和试炼场界面
+      agent/                      顶栏聊天弹窗、单份历史、模型流与五个本地工具
     lib/
       utils.ts                    合并 className、复制文本
     tools/

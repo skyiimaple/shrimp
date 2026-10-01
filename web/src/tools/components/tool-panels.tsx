@@ -2,13 +2,19 @@ import { useMutation } from '@tanstack/react-query';
 import { Check, Copy, LoaderCircle, Plus, Send, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../components/ui/accordion';
+import {
   Button,
   Card,
   ErrorBox,
   Field,
   Input,
   SecondaryButton,
-  Select,
+  OptionSelect,
   Textarea,
 } from '../../components/ui';
 import { sendHttpRequest } from '../../features/http/client';
@@ -180,17 +186,18 @@ export function HashTool() {
     <div className="tool-grid">
       <Card className="grid gap-4">
         <Field label="哈希算法">
-          <Select
+          <OptionSelect
+            aria-label="哈希算法"
             value={algorithm}
-            onChange={(e) => {
-              setAlgorithm(e.target.value as HashAlgorithm);
+            onValueChange={(value) => {
+              setAlgorithm(value as HashAlgorithm);
               setOutput('');
             }}
-          >
-            {['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </Select>
+            options={['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'].map((value) => ({
+              value,
+              label: value,
+            }))}
+          />
         </Field>
         <Field label="待计算文本" hint="允许计算空文本">
           <Textarea value={text} onChange={(e) => setText(e.target.value)} />
@@ -249,10 +256,15 @@ export function TimestampTool() {
             <Input value={input} onChange={(e) => setInput(e.target.value)} />
           </Field>
           <Field label="单位">
-            <Select value={unit} onChange={(e) => setUnit(e.target.value as typeof unit)}>
-              <option value="seconds">秒</option>
-              <option value="milliseconds">毫秒</option>
-            </Select>
+            <OptionSelect
+              aria-label="单位"
+              value={unit}
+              onValueChange={(value) => setUnit(value as typeof unit)}
+              options={[
+                { value: 'seconds', label: '秒' },
+                { value: 'milliseconds', label: '毫秒' },
+              ]}
+            />
           </Field>
         </div>
         <Actions>
@@ -355,9 +367,14 @@ export function CronTool() {
         </Field>
         <div className="flex flex-wrap gap-2">
           {['*/15 * * * *', '0 9 * * 1-5', '0 0 1 * *'].map((value) => (
-            <button key={value} onClick={() => setExpression(value)} className="chip">
+            <Button
+              key={value}
+              variant="outline"
+              onClick={() => setExpression(value)}
+              className="chip"
+            >
               {value}
-            </button>
+            </Button>
           ))}
         </div>
         <Button onClick={run}>分析计划</Button>
@@ -467,11 +484,14 @@ export function HttpTool() {
       <Card className="grid gap-5">
         <div className="grid gap-3 sm:grid-cols-[8rem_1fr]">
           <Field label="方法">
-            <Select value={method} onChange={(e) => setMethod(e.target.value as HttpMethod)}>
-              {['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </Select>
+            <OptionSelect
+              aria-label="方法"
+              value={method}
+              onValueChange={(value) => setMethod(value as HttpMethod)}
+              options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].map(
+                (value) => ({ value, label: value }),
+              )}
+            />
           </Field>
           <Field label="请求 URL">
             <Input
@@ -510,13 +530,15 @@ export function HttpTool() {
                 onChange={(e) => updateHeader(row.id, 'value', e.target.value)}
                 placeholder="Value"
               />
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 aria-label="删除请求头"
                 className="icon-button"
                 onClick={() => setHeaders((rows) => rows.filter((item) => item.id !== row.id))}
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -551,12 +573,18 @@ export function HttpTool() {
                 <span className="status-badge secondary">Base64 响应</span>
               )}
             </div>
-            <details>
-              <summary className="cursor-pointer text-sm font-medium">
-                响应头（{Object.keys(mutation.data.headers).length}）
-              </summary>
-              <pre className="response-code">{JSON.stringify(mutation.data.headers, null, 2)}</pre>
-            </details>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="headers" className="border-0">
+                <AccordionTrigger className="py-2 text-sm font-medium">
+                  响应头（{Object.keys(mutation.data.headers).length}）
+                </AccordionTrigger>
+                <AccordionContent>
+                  <pre className="response-code">
+                    {JSON.stringify(mutation.data.headers, null, 2)}
+                  </pre>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <ResultArea value={mutation.data.body} label="响应 Body" />
           </div>
         ) : (

@@ -6,7 +6,7 @@ import {
   Field,
   Input,
   SecondaryButton,
-  Select,
+  OptionSelect,
   Textarea,
 } from '../../components/ui';
 import { ToolResult } from '../../tools/components/tool-panel-shared';
@@ -344,18 +344,20 @@ export function JevTool() {
           <Card className="grid gap-5">
             <div className="grid gap-4">
               <Field label="state 格式">
-                <Select
+                <OptionSelect
+                  aria-label="state 格式"
                   className="w-full sm:w-44"
                   value={stateMode}
-                  onChange={(event) => {
-                    setStateMode(event.target.value as StateMode);
+                  onValueChange={(value) => {
+                    setStateMode(value as StateMode);
                     setResult(null);
                     setError('');
                   }}
-                >
-                  <option>文本</option>
-                  <option>JSON</option>
-                </Select>
+                  options={[
+                    { value: '文本', label: '文本' },
+                    { value: 'JSON', label: 'JSON' },
+                  ]}
+                />
               </Field>
               <Field label="state 内容">
                 <Textarea
@@ -422,10 +424,11 @@ export function JevTool() {
                           />
                         </Field>
                         <Field label={`问题类型 ${index + 1}`}>
-                          <Select
+                          <OptionSelect
+                            aria-label={`问题类型 ${index + 1}`}
                             value={question.type}
-                            onChange={(event) => {
-                              const type = event.target.value as QuestionType;
+                            onValueChange={(value) => {
+                              const type = value as QuestionType;
                               updateForm(
                                 formQuestions.map((item, itemIndex) =>
                                   itemIndex === index
@@ -443,11 +446,12 @@ export function JevTool() {
                                 ),
                               );
                             }}
-                          >
-                            <option value="noul">Noul · 是/否</option>
-                            <option value="choice">Choice · 选择</option>
-                            <option value="score">Score · 评分</option>
-                          </Select>
+                            options={[
+                              { value: 'noul', label: 'Noul · 是/否' },
+                              { value: 'choice', label: 'Choice · 选择' },
+                              { value: 'score', label: 'Score · 评分' },
+                            ]}
+                          />
                         </Field>
                         <SecondaryButton
                           onClick={() =>

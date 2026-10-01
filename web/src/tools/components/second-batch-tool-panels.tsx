@@ -8,6 +8,8 @@ import {
   SecondaryButton,
   Textarea,
 } from '../../components/ui';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Label } from '../../components/ui/label';
 import { copyText } from '../../lib/utils';
 import { convertColor, type ColorValues } from '../lib/color';
 import { markdownToHtml } from '../lib/markdown';
@@ -134,18 +136,18 @@ export function PasswordTool() {
         </Field>
         <div className="grid grid-cols-2 gap-2">
           {optionLabels.map(({ key, label }) => (
-            <label key={key} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+            <div key={key} className="flex items-center gap-2 text-sm">
+              <Checkbox
+                id={`password-option-${key}`}
                 checked={options[key]}
-                onChange={(event) => {
-                  setOptions({ ...options, [key]: event.target.checked });
+                onCheckedChange={(checked) => {
+                  setOptions({ ...options, [key]: checked === true });
                   setPassword('');
                   setError('');
                 }}
               />
-              {label}
-            </label>
+              <Label htmlFor={`password-option-${key}`}>{label}</Label>
+            </div>
           ))}
         </div>
         <Button onClick={generate}>生成密码</Button>

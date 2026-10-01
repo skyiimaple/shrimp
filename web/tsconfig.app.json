@@ -15,7 +15,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "@testing-library/jest-dom", "node"]
+    "types": ["vitest/globals", "@testing-library/jest-dom", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src", "api", "local-proxy.ts", "vite.config.ts"]
 }

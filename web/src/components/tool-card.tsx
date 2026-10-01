@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowUpRight, Heart } from 'lucide-react';
 import { useFavorites } from '../features/favorites/favorites-provider';
+import { Button } from './ui';
 import type { ToolDefinition } from '../tools/types';
 export function ToolCard({ tool }: { tool: ToolDefinition }) {
   const { favorites, toggle } = useFavorites();
@@ -12,13 +13,15 @@ export function ToolCard({ tool }: { tool: ToolDefinition }) {
         <span className="bg-primary/10 text-primary grid size-11 place-items-center rounded-xl">
           <Icon size={22} />
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           className="icon-button size-9"
           aria-label={active ? `取消收藏 ${tool.name}` : `收藏 ${tool.name}`}
           onClick={() => toggle(tool.slug)}
         >
           <Heart size={17} className={active ? 'fill-current text-rose-500' : ''} />
-        </button>
+        </Button>
       </div>
       <Link
         to="/tools/$slug"

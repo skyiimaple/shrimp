@@ -18,7 +18,8 @@ describe('哈希工具', () => {
         'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
       ),
     ).toBeInTheDocument();
-    await user.selectOptions(screen.getByRole('combobox'), 'SHA-512');
+    await user.click(screen.getByRole('combobox', { name: '哈希算法' }));
+    await user.click(screen.getByRole('option', { name: 'SHA-512' }));
     expect(screen.getByLabelText('SHA-512 摘要')).toHaveValue('');
   });
 });
@@ -66,7 +67,8 @@ describe('HTTP 工具界面', () => {
         <HttpTool />
       </QueryClientProvider>,
     );
-    await user.selectOptions(screen.getByLabelText('方法'), 'POST');
+    await user.click(screen.getByRole('combobox', { name: '方法' }));
+    await user.click(screen.getByRole('option', { name: 'POST' }));
     await user.clear(screen.getByLabelText('请求 URL'));
     await user.type(screen.getByLabelText('请求 URL'), 'https://example.com/api');
     await user.clear(screen.getByLabelText('请求头名称'));

@@ -1,7 +1,10 @@
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { Moon, Monitor, Search, Shrimp, Sun } from 'lucide-react';
 import { CatalogProvider, useCatalog } from '../features/catalog/catalog-provider';
+import { AgentLauncher } from '../features/agent/agent-launcher';
 import { useTheme } from '../features/theme/theme-provider';
+import { Button, Input } from './ui';
+import { Label } from './ui/label';
 
 export function AppShell() {
   return (
@@ -34,30 +37,34 @@ function ShellFrame() {
             </span>
             <span className="hidden sm:inline">Shrimp 工具箱</span>
           </Link>
-          <label className="header-search">
+          <Label className="header-search">
             <Search size={16} aria-hidden="true" />
-            <input
+            <Input
+              className="h-full min-h-0 border-0 bg-transparent p-0 shadow-none focus-visible:border-0 focus-visible:ring-0"
               aria-label="搜索工具"
               value={query}
               onChange={(event) => updateQuery(event.target.value)}
               placeholder="搜索 JSON、时间戳、周报…"
             />
-          </label>
+          </Label>
           <nav className="flex items-center gap-2">
+            <AgentLauncher />
             <a
               href="/#favorites"
               className="text-muted-foreground hover:bg-muted hover:text-foreground hidden rounded-lg px-3 py-2 text-sm font-medium md:block"
             >
               我的收藏
             </a>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               className="icon-button"
               aria-label={`切换主题，当前为${theme}`}
               title={`主题：${theme}`}
               onClick={() => setTheme(next)}
             >
               <Icon size={18} />
-            </button>
+            </Button>
           </nav>
         </div>
       </header>

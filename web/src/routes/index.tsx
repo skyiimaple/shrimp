@@ -1,5 +1,6 @@
 import { Binary, Braces, Clock3, Code2, Globe2, LayoutGrid, Search } from 'lucide-react';
 import { ToolCard } from '../components/tool-card';
+import { Button } from '../components/ui';
 import { useCatalog, type CatalogCategory } from '../features/catalog/catalog-provider';
 import { useFavorites } from '../features/favorites/favorites-provider';
 import { groupToolsByCategory, searchTools } from '../tools/registry';
@@ -38,7 +39,8 @@ export function HomePage() {
           {tags.map((tag) => {
             const Icon = tag === '全部' ? LayoutGrid : categoryIcons[tag];
             return (
-              <button
+              <Button
+                variant="outline"
                 className="category-tag"
                 type="button"
                 role="radio"
@@ -48,7 +50,7 @@ export function HomePage() {
               >
                 <Icon size={15} aria-hidden="true" />
                 {tag}
-              </button>
+              </Button>
             );
           })}
         </div>

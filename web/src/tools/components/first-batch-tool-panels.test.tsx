@@ -56,7 +56,8 @@ describe('文本工具', () => {
   it('转换文本命名格式', async () => {
     const user = userEvent.setup();
     render(<TextCaseTool />);
-    await user.selectOptions(screen.getByLabelText('目标格式'), 'snake');
+    await user.click(screen.getByRole('combobox', { name: '目标格式' }));
+    await user.click(screen.getByRole('option', { name: 'snake_case' }));
     expect(screen.getByLabelText('转换结果')).toHaveValue('hello_world');
   });
 
@@ -75,9 +76,11 @@ describe('进制转换工具', () => {
     render(<RadixTool />);
     await user.click(screen.getByRole('button', { name: '转换进制' }));
     expect(screen.getByLabelText('转换结果')).toHaveValue('FF');
-    await user.selectOptions(screen.getByLabelText('目标进制'), '2');
+    await user.click(screen.getByRole('combobox', { name: '目标进制' }));
+    await user.click(screen.getByRole('option', { name: /二进制/ }));
     expect(screen.getByLabelText('转换结果')).toHaveValue('');
-    await user.selectOptions(screen.getByLabelText('目标进制'), '16');
+    await user.click(screen.getByRole('combobox', { name: '目标进制' }));
+    await user.click(screen.getByRole('option', { name: /十六进制/ }));
     await user.click(screen.getByRole('button', { name: '转换进制' }));
     fireEvent.change(screen.getByRole('textbox', { name: '待转换整数' }), {
       target: { value: 'GG' },

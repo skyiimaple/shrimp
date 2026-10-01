@@ -9,6 +9,8 @@ import {
   SecondaryButton,
   Textarea,
 } from '../../components/ui';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Label } from '../../components/ui/label';
 import { copyText } from '../../lib/utils';
 import { generateWeeklyReport, parseWeeklyRows, productMap } from '../lib/weekly-report';
 import { readWeeklyMembers, writeWeeklyMembers } from '../lib/weekly-members';
@@ -99,7 +101,7 @@ export function WeeklyReportTool() {
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="grid content-start gap-3">
             <div className="grid gap-2 text-sm font-medium">
-              <label htmlFor="weekly-member">成员姓名</label>
+              <Label htmlFor="weekly-member">成员姓名</Label>
               <div className="flex gap-2">
                 <Input
                   id="weekly-member"
@@ -134,21 +136,29 @@ export function WeeklyReportTool() {
                       className="border-border bg-card relative z-10 flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm"
                       key={name}
                     >
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="checkbox"
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id={`weekly-member-${name}`}
                           checked={selectedMembers.includes(name)}
-                          onChange={() => toggleMember(name)}
+                          onCheckedChange={() => toggleMember(name)}
                         />
-                        {name}
-                      </label>
-                      <button
+                        <Label
+                          htmlFor={`weekly-member-${name}`}
+                          className="cursor-pointer font-normal"
+                        >
+                          {name}
+                        </Label>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 min-h-0 p-0"
                         type="button"
                         aria-label={`删除成员 ${name}`}
                         onClick={() => removeMember(name)}
                       >
                         <X size={14} />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -163,19 +173,19 @@ export function WeeklyReportTool() {
             <legend className="mb-3 text-sm font-medium">产品项目</legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {productEntries.map(([key, name]) => (
-                <label
+                <div
                   className="border-border bg-background flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm"
                   key={key}
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
+                    id={`weekly-product-${key}`}
                     checked={selectedProducts.includes(key)}
-                    onChange={() => toggleProduct(key)}
+                    onCheckedChange={() => toggleProduct(key)}
                   />
-                  <span>
+                  <Label htmlFor={`weekly-product-${key}`} className="cursor-pointer font-normal">
                     <b>{key}</b> · {name}
-                  </span>
-                </label>
+                  </Label>
+                </div>
               ))}
             </div>
           </fieldset>

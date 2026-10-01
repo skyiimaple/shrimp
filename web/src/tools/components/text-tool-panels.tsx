@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, ErrorBox, Field, Input, Select, Textarea } from '../../components/ui';
+import { Button, Card, ErrorBox, Field, OptionSelect, Textarea } from '../../components/ui';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Label } from '../../components/ui/label';
 import {
   decodeUrlComponent,
   encodeUrlComponent,
@@ -102,19 +104,20 @@ export function TextCaseTool() {
           <Textarea value={input} onChange={(event) => setInput(event.target.value)} />
         </Field>
         <Field label="目标格式">
-          <Select
+          <OptionSelect
             aria-label="目标格式"
             value={mode}
-            onChange={(event) => setMode(event.target.value as TextCaseMode)}
-          >
-            <option value="camel">camelCase</option>
-            <option value="pascal">PascalCase</option>
-            <option value="snake">snake_case</option>
-            <option value="kebab">kebab-case</option>
-            <option value="title">Title Case</option>
-            <option value="upper">大写单词</option>
-            <option value="lower">小写单词</option>
-          </Select>
+            onValueChange={(value) => setMode(value as TextCaseMode)}
+            options={[
+              { value: 'camel', label: 'camelCase' },
+              { value: 'pascal', label: 'PascalCase' },
+              { value: 'snake', label: 'snake_case' },
+              { value: 'kebab', label: 'kebab-case' },
+              { value: 'title', label: 'Title Case' },
+              { value: 'upper', label: '大写单词' },
+              { value: 'lower', label: '小写单词' },
+            ]}
+          />
         </Field>
       </Card>
       <Card>
@@ -136,21 +139,25 @@ export function ListTool() {
           <Textarea value={input} onChange={(event) => setInput(event.target.value)} />
         </Field>
         <div className="grid gap-3 sm:grid-cols-[1fr_10rem] sm:items-end">
-          <label className="flex min-h-11 items-center gap-2 text-sm">
-            <Input
-              className="min-h-0 w-4"
-              type="checkbox"
+          <div className="flex min-h-11 items-center gap-2 text-sm">
+            <Checkbox
+              id="list-deduplicate"
               checked={deduplicate}
-              onChange={(event) => setDeduplicate(event.target.checked)}
+              onCheckedChange={(checked) => setDeduplicate(checked === true)}
             />
-            去除重复项
-          </label>
+            <Label htmlFor="list-deduplicate">去除重复项</Label>
+          </div>
           <Field label="排序">
-            <Select value={sort} onChange={(event) => setSort(event.target.value as ListSort)}>
-              <option value="none">保持顺序</option>
-              <option value="asc">升序</option>
-              <option value="desc">降序</option>
-            </Select>
+            <OptionSelect
+              aria-label="排序"
+              value={sort}
+              onValueChange={(value) => setSort(value as ListSort)}
+              options={[
+                { value: 'none', label: '保持顺序' },
+                { value: 'asc', label: '升序' },
+                { value: 'desc', label: '降序' },
+              ]}
+            />
           </Field>
         </div>
         <Button onClick={() => setResult(processList(input, { deduplicate, sort }))}>
