@@ -34,6 +34,7 @@ import { parseTimestamp } from '../../tools/lib/timestamp';
 import { convertTextCase, type TextCaseMode } from '../../tools/lib/text-processing';
 import { generateUuidBatch } from '../../tools/lib/uuid';
 import { runRegexInWorker } from './regex-runner';
+import { executeToolboxTool, toolboxSchemas } from './toolbox';
 
 interface ToolSchema {
   type: 'function';
@@ -241,6 +242,7 @@ export const agentToolSchemas: ToolSchema[] = [
     { query: { type: 'string' } },
     ['query'],
   ),
+  ...toolboxSchemas,
 ];
 
 const invalid = (content: string) => ({ ok: false, content });
@@ -513,8 +515,10 @@ export async function executeAgentTool(
         if (!shortString(args.query, 100)) return invalid('HTTP 状态码查询参数无效或过长');
         return success(JSON.stringify(findHttpStatuses(args.query)));
       }
-      default:
-        return invalid('未授权的工具');
+      default: {
+        const extra = await executeToolboxTool(name, args, signal);
+        return extra ?? invalid('未授权的工具');
+      }
     }
   } catch {
     return invalid('工具执行失败');

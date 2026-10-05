@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { agentToolSchemas, executeAgentTool } from './tools';
+import { toolboxSchemas } from './toolbox';
 
 describe('Agent fixed local tools', () => {
   it('exposes the approved deterministic local functions', () => {
@@ -33,6 +34,7 @@ describe('Agent fixed local tools', () => {
       'mac_address_generate',
       'mime_lookup',
       'http_status_lookup',
+      ...toolboxSchemas.map((tool) => tool.function.name),
     ]);
   });
 
@@ -250,6 +252,29 @@ describe('Agent fixed local tools', () => {
     expect((await executeAgentTool('ipv4_subnet', { input: '300.1.1.1/24' })).ok).toBe(false);
     expect((await executeAgentTool('ipv4_address', { input: '4294967296' })).ok).toBe(false);
     expect((await executeAgentTool('mime_lookup', { query: 'x'.repeat(201) })).ok).toBe(false);
+  });
+
+  it('runs the remaining local toolbox functions', async () => {
+    expect((await executeAgentTool('cron_analyze', { expression: '*/15 * * * *' })).ok).toBe(true);
+    expect((await executeAgentTool('markdown_to_html', { input: '# 虾' })).content).toContain('虾');
+    expect(
+      (await executeAgentTool('sql_format', { input: 'select 1' })).content.toLowerCase(),
+    ).toContain('select');
+    const list = JSON.parse(
+      (await executeAgentTool('list_process', { input: 'b\na\nb', deduplicate: true, sort: 'asc' }))
+        .content,
+    );
+    expect(list.output).toBe('a\nb');
+    expect((await executeAgentTool('math_expression', { input: '1+2*3' })).content).toBe('7');
+    expect(
+      (await executeAgentTool('iban_inspect', { input: 'GB82WEST12345698765432' })).content,
+    ).toContain('"valid":true');
+    expect((await executeAgentTool('chmod_info', { input: '755' })).content).toContain('rwxr-xr-x');
+    expect(
+      (await executeAgentTool('phone_number', { input: '2025550123', region: 'US' })).content,
+    ).toContain('+1');
+    expect((await executeAgentTool('qr_code', { content: 'shrimp' })).content).toContain('<svg');
+    expect((await executeAgentTool('cron_analyze', { expression: 'not cron' })).ok).toBe(false);
   });
 
   it('rejects unknown functions and oversized or malformed inputs', async () => {
