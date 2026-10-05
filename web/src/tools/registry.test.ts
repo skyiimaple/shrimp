@@ -3,8 +3,8 @@ import { groupToolsByCategory, searchTools, tools } from './registry';
 
 describe('工具注册表', () => {
   it('slug 与路径唯一并保持对应', () => {
-    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(56);
-    expect(new Set(tools.map((tool) => tool.path)).size).toBe(56);
+    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(91);
+    expect(new Set(tools.map((tool) => tool.path)).size).toBe(91);
     expect(tools.every((tool) => tool.path === `/tools/${tool.slug}`)).toBe(true);
   });
   it('按名称、关键词、分类和简介检索', () => {
@@ -57,6 +57,39 @@ describe('工具注册表', () => {
     expect(searchTools('HTTP 状态码').map((tool) => tool.slug)).toContain('http-status');
     expect(searchTools('设备信息').map((tool) => tool.slug)).toContain('device-info');
     expect(searchTools('Keycode').map((tool) => tool.slug)).toContain('keycode');
+    expect(searchTools('Lorem Ipsum').map((tool) => tool.slug)).toContain('lorem-ipsum');
+    expect(searchTools('文本脱敏').map((tool) => tool.slug)).toContain('text-mask');
+    expect(searchTools('Email 标准化').map((tool) => tool.slug)).toContain('email-normalizer');
+    expect(searchTools('正则速查').map((tool) => tool.slug)).toContain('regex-cheatsheet');
+    expect(searchTools('IPv4 范围').map((tool) => tool.slug)).toContain('ipv4-range');
+    expect(searchTools('IPv6 ULA').map((tool) => tool.slug)).toContain('ipv6-ula');
+    expect(searchTools('Base64 文件').map((tool) => tool.slug)).toContain('base64-file');
+    expect(searchTools('二维码').map((tool) => tool.slug)).toContain('qr-code');
+    expect(searchTools('WiFi 二维码').map((tool) => tool.slug)).toContain('wifi-qr-code');
+    expect(searchTools('数学表达式').map((tool) => tool.slug)).toContain('math-expression');
+    expect(searchTools('ETA').map((tool) => tool.slug)).toContain('eta');
+    expect(searchTools('秒表').map((tool) => tool.slug)).toContain('stopwatch');
+    expect(searchTools('基准测试').map((tool) => tool.slug)).toContain('benchmark');
+    expect(searchTools('NATO').map((tool) => tool.slug)).toContain('nato-alphabet');
+    expect(searchTools('Outlook Safe Links').map((tool) => tool.slug)).toContain(
+      'outlook-safe-link',
+    );
+    expect(searchTools('Git 命令').map((tool) => tool.slug)).toContain('git-commands');
+    expect(searchTools('Emoji').map((tool) => tool.slug)).toContain('emoji-picker');
+    expect(searchTools('IBAN').map((tool) => tool.slug)).toContain('iban');
+    expect(searchTools('Bcrypt').map((tool) => tool.slug)).toContain('bcrypt');
+    expect(searchTools('BIP39').map((tool) => tool.slug)).toContain('bip39-mnemonic');
+    expect(searchTools('摄像头').map((tool) => tool.slug)).toContain('camera-recorder');
+    expect(searchTools('Docker').map((tool) => tool.slug)).toContain('docker-compose');
+    expect(searchTools('电话号码').map((tool) => tool.slug)).toContain('phone-number');
+    expect(searchTools('HTML 编辑').map((tool) => tool.slug)).toContain('html-editor');
+    expect(searchTools('令牌生成').map((tool) => tool.slug)).toContain('token-generator');
+    expect(searchTools('密码强度').map((tool) => tool.slug)).toContain('password-strength');
+    expect(searchTools('ASCII 字画').map((tool) => tool.slug)).toContain('ascii-text');
+    expect(searchTools('MAC 厂商').map((tool) => tool.slug)).toContain('mac-vendor');
+    expect(searchTools('PDF 签名').map((tool) => tool.slug)).toContain('pdf-signature');
+    expect(searchTools('IP 查询').map((tool) => tool.slug)).toContain('ip-lookup');
+    expect(searchTools('DNS 查询').map((tool) => tool.slug)).toContain('dns-lookup');
   });
   it('按注册顺序分组', () => {
     expect(groupToolsByCategory(tools).get('网络工具')?.[0].slug).toBe('http');

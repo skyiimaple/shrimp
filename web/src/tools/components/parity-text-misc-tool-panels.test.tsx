@@ -14,7 +14,9 @@ describe('text miscellaneous panels', () => {
     render(<LoremIpsumTool />);
     fireEvent.change(screen.getByLabelText('段落数量'), { target: { value: '3' } });
     await user.click(screen.getByRole('button', { name: '生成文本' }));
-    expect((screen.getByLabelText('生成结果') as HTMLTextAreaElement).value.split('\n\n')).toHaveLength(3);
+    expect(
+      (screen.getByLabelText('生成结果') as HTMLTextAreaElement).value.split('\n\n'),
+    ).toHaveLength(3);
   });
 
   it('masks text with configurable visible ends', async () => {
@@ -30,7 +32,9 @@ describe('text miscellaneous panels', () => {
   it('normalizes email without changing the local part', async () => {
     const user = userEvent.setup();
     render(<EmailNormalizerTool />);
-    fireEvent.change(screen.getByLabelText('Email 地址'), { target: { value: '  User.Name@GMAIL.COM  ' } });
+    fireEvent.change(screen.getByLabelText('Email 地址'), {
+      target: { value: '  User.Name@GMAIL.COM  ' },
+    });
     await user.click(screen.getByRole('button', { name: '标准化 Email' }));
     expect(screen.getByLabelText('标准化结果')).toHaveValue('User.Name@gmail.com');
   });

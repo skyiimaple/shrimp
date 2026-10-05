@@ -18,8 +18,12 @@ function GeneratorTool({ button, generate }: { button: string; generate: () => s
   const [output, setOutput] = useState('');
   return (
     <div className="tool-grid">
-      <Card><Button onClick={() => setOutput(generate())}>{button}</Button></Card>
-      <Card><ToolResult value={output} /></Card>
+      <Card>
+        <Button onClick={() => setOutput(generate())}>{button}</Button>
+      </Card>
+      <Card>
+        <ToolResult value={output} />
+      </Card>
     </div>
   );
 }
@@ -33,23 +37,41 @@ export function RandomPortTool() {
 }
 
 export function BinaryTextTool() {
-  return <SingleInputTool initial="Hello" label="输入文本" multiline actions={[
-    { label: '转为二进制', run: textToBinary },
-    { label: '转为文本', run: binaryToText },
-  ]} />;
+  return (
+    <SingleInputTool
+      initial="Hello"
+      label="输入文本"
+      multiline
+      actions={[
+        { label: '转为二进制', run: textToBinary },
+        { label: '转为文本', run: binaryToText },
+      ]}
+    />
+  );
 }
 
 export function UnicodeTextTool() {
-  return <SingleInputTool initial="Hello 😀" label="输入文本" multiline actions={[
-    { label: '转为 Unicode', run: textToUnicode },
-    { label: '转为文本', run: unicodeToText },
-  ]} />;
+  return (
+    <SingleInputTool
+      initial="Hello 😀"
+      label="输入文本"
+      multiline
+      actions={[
+        { label: '转为 Unicode', run: textToUnicode },
+        { label: '转为文本', run: unicodeToText },
+      ]}
+    />
+  );
 }
 
 export function SlugifyTool() {
-  return <SingleInputTool initial="Café & 你好 World" label="输入文本" actions={[
-    { label: '生成 Slug', run: slugify },
-  ]} />;
+  return (
+    <SingleInputTool
+      initial="Café & 你好 World"
+      label="输入文本"
+      actions={[{ label: '生成 Slug', run: slugify }]}
+    />
+  );
 }
 
 const scales: Array<{ value: TemperatureScale; label: string }> = [
@@ -64,7 +86,10 @@ export function TemperatureTool() {
   const [to, setTo] = useState<TemperatureScale>('F');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
-  const clear = () => { setOutput(''); setError(''); };
+  const clear = () => {
+    setOutput('');
+    setError('');
+  };
   const run = () => {
     try {
       const value = convertTemperature(Number(input), from, to);
@@ -79,15 +104,47 @@ export function TemperatureTool() {
   return (
     <div className="tool-grid">
       <Card className="grid gap-4">
-        <Field label="温度值"><Input aria-label="温度值" type="number" value={input} onChange={(event) => { setInput(event.target.value); clear(); }} /></Field>
+        <Field label="温度值">
+          <Input
+            aria-label="温度值"
+            type="number"
+            value={input}
+            onChange={(event) => {
+              setInput(event.target.value);
+              clear();
+            }}
+          />
+        </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="来源单位"><OptionSelect aria-label="来源单位" value={from} onValueChange={(value) => { setFrom(value as TemperatureScale); clear(); }} options={scales} /></Field>
-          <Field label="目标单位"><OptionSelect aria-label="目标单位" value={to} onValueChange={(value) => { setTo(value as TemperatureScale); clear(); }} options={scales} /></Field>
+          <Field label="来源单位">
+            <OptionSelect
+              aria-label="来源单位"
+              value={from}
+              onValueChange={(value) => {
+                setFrom(value as TemperatureScale);
+                clear();
+              }}
+              options={scales}
+            />
+          </Field>
+          <Field label="目标单位">
+            <OptionSelect
+              aria-label="目标单位"
+              value={to}
+              onValueChange={(value) => {
+                setTo(value as TemperatureScale);
+                clear();
+              }}
+              options={scales}
+            />
+          </Field>
         </div>
         <Button onClick={run}>转换温度</Button>
         {error && <ErrorBox>{error}</ErrorBox>}
       </Card>
-      <Card><ToolResult value={output} /></Card>
+      <Card>
+        <ToolResult value={output} />
+      </Card>
     </div>
   );
 }

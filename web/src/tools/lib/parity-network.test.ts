@@ -18,9 +18,26 @@ describe('IPv4 subnet calculator', () => {
   });
 
   it('handles /0, /31 and /32 boundaries without signed integer errors', () => {
-    expect(calculateIpv4Subnet('203.0.113.7/0')).toMatchObject({ network: '0.0.0.0', broadcast: '255.255.255.255', totalAddresses: 4294967296, usableHosts: 4294967294 });
-    expect(calculateIpv4Subnet('198.51.100.11/31')).toMatchObject({ network: '198.51.100.10', broadcast: '198.51.100.11', firstHost: '198.51.100.10', lastHost: '198.51.100.11', usableHosts: 2 });
-    expect(calculateIpv4Subnet('255.255.255.255/32')).toMatchObject({ network: '255.255.255.255', broadcast: '255.255.255.255', firstHost: '255.255.255.255', lastHost: '255.255.255.255', usableHosts: 1 });
+    expect(calculateIpv4Subnet('203.0.113.7/0')).toMatchObject({
+      network: '0.0.0.0',
+      broadcast: '255.255.255.255',
+      totalAddresses: 4294967296,
+      usableHosts: 4294967294,
+    });
+    expect(calculateIpv4Subnet('198.51.100.11/31')).toMatchObject({
+      network: '198.51.100.10',
+      broadcast: '198.51.100.11',
+      firstHost: '198.51.100.10',
+      lastHost: '198.51.100.11',
+      usableHosts: 2,
+    });
+    expect(calculateIpv4Subnet('255.255.255.255/32')).toMatchObject({
+      network: '255.255.255.255',
+      broadcast: '255.255.255.255',
+      firstHost: '255.255.255.255',
+      lastHost: '255.255.255.255',
+      usableHosts: 1,
+    });
   });
 
   it('rejects malformed addresses and prefixes', () => {
@@ -32,8 +49,16 @@ describe('IPv4 subnet calculator', () => {
 
 describe('IPv4 address converter', () => {
   it('converts dotted IPv4 to unsigned decimal, hex and 32-bit binary', () => {
-    expect(convertIpv4Address('255.255.255.255')).toEqual({ address: '255.255.255.255', decimal: '4294967295', hexadecimal: 'FFFFFFFF', binary: '11111111111111111111111111111111' });
-    expect(convertIpv4Address('192.168.1.1')).toMatchObject({ decimal: '3232235777', hexadecimal: 'C0A80101' });
+    expect(convertIpv4Address('255.255.255.255')).toEqual({
+      address: '255.255.255.255',
+      decimal: '4294967295',
+      hexadecimal: 'FFFFFFFF',
+      binary: '11111111111111111111111111111111',
+    });
+    expect(convertIpv4Address('192.168.1.1')).toMatchObject({
+      decimal: '3232235777',
+      hexadecimal: 'C0A80101',
+    });
   });
 
   it('accepts decimal, hexadecimal and binary values', () => {

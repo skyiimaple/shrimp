@@ -52,13 +52,53 @@ export function OgMetaTool() {
   return (
     <div className="tool-grid">
       <Card className="grid gap-4">
-        <Field label="标题"><Input aria-label="标题" value={title} onChange={(event) => { setTitle(event.target.value); setOutput(''); }} /></Field>
-        <Field label="描述"><Input aria-label="描述" value={description} onChange={(event) => { setDescription(event.target.value); setOutput(''); }} /></Field>
-        <Field label="页面 URL"><Input aria-label="页面 URL" value={url} onChange={(event) => { setUrl(event.target.value); setOutput(''); }} /></Field>
-        <Field label="图片 URL（可选）"><Input aria-label="图片 URL" value={image} onChange={(event) => { setImage(event.target.value); setOutput(''); }} /></Field>
-        <Button onClick={() => setOutput(generateOgTags({ title, description, url, image }))}>生成标签</Button>
+        <Field label="标题">
+          <Input
+            aria-label="标题"
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+              setOutput('');
+            }}
+          />
+        </Field>
+        <Field label="描述">
+          <Input
+            aria-label="描述"
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              setOutput('');
+            }}
+          />
+        </Field>
+        <Field label="页面 URL">
+          <Input
+            aria-label="页面 URL"
+            value={url}
+            onChange={(event) => {
+              setUrl(event.target.value);
+              setOutput('');
+            }}
+          />
+        </Field>
+        <Field label="图片 URL（可选）">
+          <Input
+            aria-label="图片 URL"
+            value={image}
+            onChange={(event) => {
+              setImage(event.target.value);
+              setOutput('');
+            }}
+          />
+        </Field>
+        <Button onClick={() => setOutput(generateOgTags({ title, description, url, image }))}>
+          生成标签
+        </Button>
       </Card>
-      <Card><ToolResult value={output} /></Card>
+      <Card>
+        <ToolResult value={output} />
+      </Card>
     </div>
   );
 }
@@ -70,25 +110,77 @@ export function SvgPlaceholderTool() {
   const [label, setLabel] = useState('320 × 180');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
-  const clear = () => { setOutput(''); setError(''); };
+  const clear = () => {
+    setOutput('');
+    setError('');
+  };
   const run = () => {
-    try { setOutput(generateSvgPlaceholder(Number(width), Number(height), color, label)); setError(''); }
-    catch (reason) { setOutput(''); setError(reason instanceof Error ? reason.message : '生成失败'); }
+    try {
+      setOutput(generateSvgPlaceholder(Number(width), Number(height), color, label));
+      setError('');
+    } catch (reason) {
+      setOutput('');
+      setError(reason instanceof Error ? reason.message : '生成失败');
+    }
   };
   return (
     <div className="tool-grid">
       <Card className="grid gap-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="宽度"><Input aria-label="宽度" type="number" value={width} onChange={(event) => { setWidth(event.target.value); clear(); }} /></Field>
-          <Field label="高度"><Input aria-label="高度" type="number" value={height} onChange={(event) => { setHeight(event.target.value); clear(); }} /></Field>
+          <Field label="宽度">
+            <Input
+              aria-label="宽度"
+              type="number"
+              value={width}
+              onChange={(event) => {
+                setWidth(event.target.value);
+                clear();
+              }}
+            />
+          </Field>
+          <Field label="高度">
+            <Input
+              aria-label="高度"
+              type="number"
+              value={height}
+              onChange={(event) => {
+                setHeight(event.target.value);
+                clear();
+              }}
+            />
+          </Field>
         </div>
-        <Field label="背景色"><Input aria-label="背景色" value={color} onChange={(event) => { setColor(event.target.value); clear(); }} /></Field>
-        <Field label="标签文本"><Input aria-label="标签文本" value={label} onChange={(event) => { setLabel(event.target.value); clear(); }} /></Field>
+        <Field label="背景色">
+          <Input
+            aria-label="背景色"
+            value={color}
+            onChange={(event) => {
+              setColor(event.target.value);
+              clear();
+            }}
+          />
+        </Field>
+        <Field label="标签文本">
+          <Input
+            aria-label="标签文本"
+            value={label}
+            onChange={(event) => {
+              setLabel(event.target.value);
+              clear();
+            }}
+          />
+        </Field>
         <Button onClick={run}>生成 SVG</Button>
         {error && <ErrorBox>{error}</ErrorBox>}
       </Card>
       <Card className="grid content-start gap-4">
-        {output && <img alt="SVG 占位图预览" className="border-border max-h-52 max-w-full rounded-lg border" src={`data:image/svg+xml,${encodeURIComponent(output)}`} />}
+        {output && (
+          <img
+            alt="SVG 占位图预览"
+            className="border-border max-h-52 max-w-full rounded-lg border"
+            src={`data:image/svg+xml,${encodeURIComponent(output)}`}
+          />
+        )}
         <ToolResult value={output} />
       </Card>
     </div>
@@ -100,11 +192,18 @@ export function PercentageTool() {
   const [b, setB] = useState('80');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
-  const clear = () => { setOutput(''); setError(''); };
+  const clear = () => {
+    setOutput('');
+    setError('');
+  };
   const run = (mode: 'of' | 'share') => {
     try {
       if (!a.trim() || !b.trim()) throw new Error('请输入两个数字');
-      setOutput(mode === 'of' ? String(percentOf(Number(a), Number(b))) : `${percentShare(Number(a), Number(b))}%`);
+      setOutput(
+        mode === 'of'
+          ? String(percentOf(Number(a), Number(b)))
+          : `${percentShare(Number(a), Number(b))}%`,
+      );
       setError('');
     } catch (reason) {
       setOutput('');
@@ -114,15 +213,37 @@ export function PercentageTool() {
   return (
     <div className="tool-grid">
       <Card className="grid gap-4">
-        <Field label="数值 A"><Input aria-label="数值 A" type="number" value={a} onChange={(event) => { setA(event.target.value); clear(); }} /></Field>
-        <Field label="数值 B"><Input aria-label="数值 B" type="number" value={b} onChange={(event) => { setB(event.target.value); clear(); }} /></Field>
+        <Field label="数值 A">
+          <Input
+            aria-label="数值 A"
+            type="number"
+            value={a}
+            onChange={(event) => {
+              setA(event.target.value);
+              clear();
+            }}
+          />
+        </Field>
+        <Field label="数值 B">
+          <Input
+            aria-label="数值 B"
+            type="number"
+            value={b}
+            onChange={(event) => {
+              setB(event.target.value);
+              clear();
+            }}
+          />
+        </Field>
         <ToolActions>
           <Button onClick={() => run('share')}>A 是 B 的百分之几</Button>
           <SecondaryButton onClick={() => run('of')}>B 的 A% 是多少</SecondaryButton>
         </ToolActions>
         {error && <ErrorBox>{error}</ErrorBox>}
       </Card>
-      <Card><ToolResult value={output} /></Card>
+      <Card>
+        <ToolResult value={output} />
+      </Card>
     </div>
   );
 }

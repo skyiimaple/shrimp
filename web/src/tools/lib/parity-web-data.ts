@@ -23,7 +23,12 @@ export function formatYaml(input: string): Result<string> {
   }
 }
 
-export function generateOgTags(input: { title: string; description: string; url: string; image?: string }) {
+export function generateOgTags(input: {
+  title: string;
+  description: string;
+  url: string;
+  image?: string;
+}) {
   const entries = [
     ['og:title', input.title],
     ['og:description', input.description],
@@ -32,11 +37,18 @@ export function generateOgTags(input: { title: string; description: string; url:
   ];
   return entries
     .filter(([, value]) => value.trim())
-    .map(([property, value]) => `<meta property="${property}" content="${encodeHtmlEntities(value)}">`)
+    .map(
+      ([property, value]) => `<meta property="${property}" content="${encodeHtmlEntities(value)}">`,
+    )
     .join('\n');
 }
 
-export function generateSvgPlaceholder(width: number, height: number, color: string, label: string) {
+export function generateSvgPlaceholder(
+  width: number,
+  height: number,
+  color: string,
+  label: string,
+) {
   if (![width, height].every((value) => Number.isInteger(value) && value >= 1 && value <= 4096)) {
     throw new Error('尺寸须为 1 到 4096 的整数');
   }

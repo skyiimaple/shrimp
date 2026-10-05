@@ -28,18 +28,16 @@ describe('IT-Tools 对标数据与 Web 工具', () => {
   });
 
   it('Open Graph 标签转义 HTML 属性', () => {
-    expect(generateOgTags({ title: 'A "title"', description: '<hello>', url: 'https://example.com' })).toContain(
-      '<meta property="og:title" content="A &quot;title&quot;">',
-    );
-    expect(generateOgTags({ title: 'A', description: '<hello>', url: 'https://example.com' })).toContain(
-      'content="&lt;hello&gt;"',
-    );
+    expect(
+      generateOgTags({ title: 'A "title"', description: '<hello>', url: 'https://example.com' }),
+    ).toContain('<meta property="og:title" content="A &quot;title&quot;">');
+    expect(
+      generateOgTags({ title: 'A', description: '<hello>', url: 'https://example.com' }),
+    ).toContain('content="&lt;hello&gt;"');
   });
 
   it('SVG 占位图转义文本并约束尺寸', () => {
-    expect(generateSvgPlaceholder(320, 180, '#123456', '<demo>')).toContain(
-      '&lt;demo&gt;',
-    );
+    expect(generateSvgPlaceholder(320, 180, '#123456', '<demo>')).toContain('&lt;demo&gt;');
     expect(() => generateSvgPlaceholder(0, 180, '#123456', 'x')).toThrow('尺寸');
     expect(() => generateSvgPlaceholder(10, 10, 'red" onload="alert(1)', 'x')).toThrow('颜色');
   });

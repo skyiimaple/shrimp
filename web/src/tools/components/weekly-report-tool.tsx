@@ -1,4 +1,4 @@
-import { Check, Copy, Plus, RotateCcw, X } from 'lucide-react';
+import { Check, ChevronDown, Copy, Plus, RotateCcw, X } from 'lucide-react';
 import { useState } from 'react';
 import {
   Button,
@@ -11,6 +11,7 @@ import {
 } from '../../components/ui';
 import { Checkbox } from '../../components/ui/checkbox';
 import { Label } from '../../components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { copyText } from '../../lib/utils';
 import { generateWeeklyReport, parseWeeklyRows, productMap } from '../lib/weekly-report';
 import { readWeeklyMembers, writeWeeklyMembers } from '../lib/weekly-members';
@@ -99,7 +100,7 @@ export function WeeklyReportTool() {
     <div className="grid gap-5">
       <Card className="grid gap-5">
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="grid content-start gap-3">
+          <div className="grid min-w-0 content-start gap-3">
             <div className="grid gap-2 text-sm font-medium">
               <Label htmlFor="weekly-member">成员姓名</Label>
               <div className="flex gap-2">
@@ -125,49 +126,68 @@ export function WeeklyReportTool() {
                 </SecondaryButton>
               </div>
             </div>
-            {memberOptions.length ? (
-              <div className="border-border bg-muted/40 grid gap-2 rounded-xl border p-3">
-                <span className="text-muted-foreground text-xs font-medium">
-                  成员选项（姓名需与表格负责人完全相同）
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {memberOptions.map((name) => (
-                    <div
-                      className="border-border bg-card relative z-10 flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm"
-                      key={name}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id={`weekly-member-${name}`}
-                          checked={selectedMembers.includes(name)}
-                          onCheckedChange={() => toggleMember(name)}
-                        />
-                        <Label
-                          htmlFor={`weekly-member-${name}`}
-                          className="cursor-pointer font-normal"
+            <Popover>
+              <PopoverTrigger asChild>
+                <SecondaryButton
+                  type="button"
+                  aria-label="选择团队成员"
+                  className="min-w-0 justify-between"
+                >
+                  <span className="min-w-0 truncate text-left">
+                    {selectedMembers.length ? selectedMembers.join('、') : '选择团队成员'}
+                  </span>
+                  <ChevronDown size={16} className="shrink-0" />
+                </SecondaryButton>
+              </PopoverTrigger>
+              <PopoverContent
+                aria-label="团队成员选项"
+                className="max-h-[min(20rem,var(--radix-popover-content-available-height))] overflow-y-auto"
+              >
+                {memberOptions.length ? (
+                  <div className="grid gap-2">
+                    <span className="text-muted-foreground text-xs font-medium">
+                      成员选项（姓名需与表格负责人完全相同）
+                    </span>
+                    <div className="grid gap-2">
+                      {memberOptions.map((name) => (
+                        <div
+                          className="border-border bg-card flex min-w-0 items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                          key={name}
                         >
-                          {name}
-                        </Label>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6 min-h-0 p-0"
-                        type="button"
-                        aria-label={`删除成员 ${name}`}
-                        onClick={() => removeMember(name)}
-                      >
-                        <X size={14} />
-                      </Button>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Checkbox
+                              id={`weekly-member-${name}`}
+                              checked={selectedMembers.includes(name)}
+                              onCheckedChange={() => toggleMember(name)}
+                            />
+                            <Label
+                              htmlFor={`weekly-member-${name}`}
+                              className="min-w-0 cursor-pointer font-normal break-all"
+                            >
+                              {name}
+                            </Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 min-h-0 shrink-0 p-0"
+                            type="button"
+                            aria-label={`删除成员 ${name}`}
+                            onClick={() => removeMember(name)}
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                尚未添加成员。成员不会预设或自动猜测。
-              </p>
-            )}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    尚未添加成员。成员不会预设或自动猜测。
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
           <fieldset className="grid content-start gap-3">
             <legend className="mb-3 text-sm font-medium">产品项目</legend>

@@ -97,7 +97,11 @@ export function generateTotpSecret() {
   return encodeBase32(crypto.getRandomValues(new Uint8Array(20)));
 }
 
-export async function totp(secret: string, unixSeconds = Math.floor(Date.now() / 1000), digits = 6) {
+export async function totp(
+  secret: string,
+  unixSeconds = Math.floor(Date.now() / 1000),
+  digits = 6,
+) {
   if (!Number.isSafeInteger(unixSeconds) || unixSeconds < 0) throw new Error('时间无效');
   if (!Number.isInteger(digits) || digits < 6 || digits > 8) throw new Error('位数须为 6 到 8');
   const key = await crypto.subtle.importKey(

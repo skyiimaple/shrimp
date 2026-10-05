@@ -28,12 +28,16 @@ describe('IT-Tools 对标 Web 与数据卡片', () => {
     const first = render(<OgMetaTool />);
     fireEvent.change(screen.getByLabelText('标题'), { target: { value: 'A "title"' } });
     await user.click(screen.getByRole('button', { name: '生成标签' }));
-    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toContain('&quot;title&quot;');
+    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toContain(
+      '&quot;title&quot;',
+    );
     first.unmount();
     render(<SvgPlaceholderTool />);
     fireEvent.change(screen.getByLabelText('标签文本'), { target: { value: '<hello>' } });
     await user.click(screen.getByRole('button', { name: '生成 SVG' }));
-    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toContain('&lt;hello&gt;');
+    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toContain(
+      '&lt;hello&gt;',
+    );
   });
 
   it('百分比卡片提供两种计算方式', async () => {

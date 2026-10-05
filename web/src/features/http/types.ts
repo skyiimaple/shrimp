@@ -1,4 +1,11 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export interface HttpProxyStatus {
+  available: boolean;
+  allowedMethods: HttpMethod[];
+  timeoutMs: number;
+  maxResponseBytes: number;
+  maxRedirects: number;
+}
 export interface HttpSendRequest {
   url: string;
   method: HttpMethod;

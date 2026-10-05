@@ -19,7 +19,9 @@ describe('network tool panels', () => {
     render(<Ipv4AddressTool />);
     fireEvent.change(screen.getByLabelText('IPv4 地址或整数'), { target: { value: '4294967295' } });
     await user.click(screen.getByRole('button', { name: '转换地址' }));
-    expect((screen.getByLabelText('地址转换结果') as HTMLTextAreaElement).value).toContain('255.255.255.255');
+    expect((screen.getByLabelText('地址转换结果') as HTMLTextAreaElement).value).toContain(
+      '255.255.255.255',
+    );
     fireEvent.change(screen.getByLabelText('IPv4 地址或整数'), { target: { value: '4294967296' } });
     await user.click(screen.getByRole('button', { name: '转换地址' }));
     expect(screen.getByText(/无效/)).toBeInTheDocument();
@@ -29,6 +31,8 @@ describe('network tool panels', () => {
     const user = userEvent.setup();
     render(<MacAddressTool />);
     await user.click(screen.getByRole('button', { name: '生成 MAC 地址' }));
-    expect((screen.getByLabelText('MAC 地址') as HTMLTextAreaElement).value).toMatch(/^(?:[0-9A-F]{2}:){5}[0-9A-F]{2}$/);
+    expect((screen.getByLabelText('MAC 地址') as HTMLTextAreaElement).value).toMatch(
+      /^(?:[0-9A-F]{2}:){5}[0-9A-F]{2}$/,
+    );
   });
 });

@@ -3,9 +3,15 @@
   "framework": "vite",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/assets/mac-vendors/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!api(?:/|$)).*)",
+      "source": "/((?!api(?:/|$)|assets/mac-vendors(?:/|$)).*)",
       "destination": "/index.html"
     }
   ]

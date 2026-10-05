@@ -15,16 +15,20 @@ describe('QR generators', () => {
   });
 
   it('escapes every ZXing WiFi reserved character in SSID and password', () => {
-    expect(buildWifiPayload({ ssid: 'A\\;, :"B', password: 'p\\;, :"q', security: 'WPA', hidden: true }))
-      .toBe('WIFI:T:WPA;S:A\\\\\\;\\, \\:\\"B;P:p\\\\\\;\\, \\:\\"q;H:true;;');
+    expect(
+      buildWifiPayload({ ssid: 'A\\;, :"B', password: 'p\\;, :"q', security: 'WPA', hidden: true }),
+    ).toBe('WIFI:T:WPA;S:A\\\\\\;\\, \\:\\"B;P:p\\\\\\;\\, \\:\\"q;H:true;;');
   });
 
   it('supports open networks and omits the password field', () => {
-    expect(buildWifiPayload({ ssid: 'Guest', password: 'ignored', security: 'nopass', hidden: false }))
-      .toBe('WIFI:T:nopass;S:Guest;H:false;;');
+    expect(
+      buildWifiPayload({ ssid: 'Guest', password: 'ignored', security: 'nopass', hidden: false }),
+    ).toBe('WIFI:T:nopass;S:Guest;H:false;;');
   });
 
   it('requires an SSID', () => {
-    expect(() => buildWifiPayload({ ssid: '', password: '', security: 'WPA', hidden: false })).toThrow('SSID');
+    expect(() =>
+      buildWifiPayload({ ssid: '', password: '', security: 'WPA', hidden: false }),
+    ).toThrow('SSID');
   });
 });

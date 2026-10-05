@@ -15,11 +15,15 @@ describe('IT-Tools 对标转换卡片', () => {
     const user = userEvent.setup();
     const first = render(<UlidTool />);
     await user.click(screen.getByRole('button', { name: '生成 ULID' }));
-    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+    expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toMatch(
+      /^[0-9A-HJKMNP-TV-Z]{26}$/,
+    );
     first.unmount();
     render(<RandomPortTool />);
     await user.click(screen.getByRole('button', { name: '生成端口' }));
-    expect(Number((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value)).toBeGreaterThanOrEqual(49152);
+    expect(
+      Number((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value),
+    ).toBeGreaterThanOrEqual(49152);
   });
 
   it('二进制与 Unicode 卡片可双向转换', async () => {

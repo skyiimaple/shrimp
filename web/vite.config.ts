@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import path from 'node:path';
 import { createJevProxyHandler } from './local-proxy';
+import networkLookupHandler from './api/network/lookup';
+import publicToolsHandler from './api/network/public-tools';
+import { macVendorAssetsPlugin } from './build/mac-vendor-assets';
 
 export default defineConfig({
   resolve: {
@@ -11,12 +14,25 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    macVendorAssetsPlugin(),
     {
       name: 'jev-local-proxy',
       configureServer(server) {
+        server.middlewares.use('/api/network/public-tools', (request, response) => {
+          void publicToolsHandler(request, response);
+        });
+        server.middlewares.use('/api/network/lookup', (request, response) => {
+          void networkLookupHandler(request, response);
+        });
         server.middlewares.use('/api/jev/evaluate', createJevProxyHandler());
       },
       configurePreviewServer(server) {
+        server.middlewares.use('/api/network/public-tools', (request, response) => {
+          void publicToolsHandler(request, response);
+        });
+        server.middlewares.use('/api/network/lookup', (request, response) => {
+          void networkLookupHandler(request, response);
+        });
         server.middlewares.use('/api/jev/evaluate', createJevProxyHandler());
       },
     },

@@ -231,6 +231,17 @@ button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
+  align-items: stretch;
+}
+.tool-grid > * {
+  min-width: 0;
+}
+.tool-grid > .grid {
+  align-content: start;
+}
+.tool-grid > .grid > button {
+  align-self: start;
+  justify-self: stretch;
 }
 .empty-state {
   display: grid;

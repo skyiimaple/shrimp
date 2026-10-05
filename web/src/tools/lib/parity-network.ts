@@ -2,7 +2,10 @@ const IPV4_MAX = 0xffffffff;
 
 function parseIpv4(address: string): number {
   const parts = address.split('.');
-  if (parts.length !== 4 || parts.some((part) => !/^(?:0|[1-9]\d{0,2})$/.test(part) || Number(part) > 255)) {
+  if (
+    parts.length !== 4 ||
+    parts.some((part) => !/^(?:0|[1-9]\d{0,2})$/.test(part) || Number(part) > 255)
+  ) {
     throw new Error('无效的 IPv4 地址');
   }
   return parts.reduce((value, part) => value * 256 + Number(part), 0);

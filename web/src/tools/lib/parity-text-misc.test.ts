@@ -10,7 +10,9 @@ describe('text miscellaneous tools', () => {
   it('generates the requested number of nonempty Lorem Ipsum paragraphs', () => {
     const paragraphs = generateLoremIpsum(3).split('\n\n');
     expect(paragraphs).toHaveLength(3);
-    expect(paragraphs.every((paragraph) => paragraph.startsWith('Lorem ipsum') || paragraph.length > 50)).toBe(true);
+    expect(
+      paragraphs.every((paragraph) => paragraph.startsWith('Lorem ipsum') || paragraph.length > 50),
+    ).toBe(true);
     expect(generateLoremIpsum(1).split('\n\n')).toHaveLength(1);
   });
 

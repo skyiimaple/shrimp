@@ -23,69 +23,421 @@ import {
   Table2,
   WholeWord,
 } from 'lucide-react';
-import { JevTool } from '../features/jev/jev-tool';
-import { RadixTool } from './components/developer-tool-panels';
-import { CsvJsonTool, JsonDiffTool } from './components/data-inspection-tool-panels';
-import {
-  BasicAuthTool,
-  ChmodTool,
-  HmacTool,
-  HtmlEntitiesTool,
-  NumeronymTool,
-  RomanNumeralTool,
-  TextDiffTool,
-  TextStatsTool,
-} from './components/parity-basics-tool-panels';
-import {
-  BinaryTextTool,
-  RandomPortTool,
-  SlugifyTool,
-  TemperatureTool,
-  UlidTool,
-  UnicodeTextTool,
-} from './components/parity-converters-tool-panels';
-import { EncryptTextTool, RsaKeyPairTool, TotpTool } from './components/parity-crypto-tool-panels';
-import {
-  Ipv4AddressTool,
-  Ipv4SubnetTool,
-  MacAddressTool,
-} from './components/parity-network-tool-panels';
-import {
-  OgMetaTool,
-  PercentageTool,
-  SvgPlaceholderTool,
-  YamlFormatTool,
-  YamlTomlTool,
-} from './components/parity-web-data-tool-panels';
-import {
-  DeviceInformationTool,
-  HttpStatusTool,
-  KeycodeTool,
-  MimeTypeTool,
-} from './components/parity-web-reference-tool-panels';
-import { JsonToXmlTool, XmlFormatTool, XmlToJsonTool } from './components/parity-xml-tool-panels';
-import {
-  ColorTool,
-  MarkdownTool,
-  PasswordTool,
-  SqlTool,
-  UserAgentTool,
-} from './components/second-batch-tool-panels';
-import { JsonTomlTool, YamlJsonTool } from './components/structured-data-tool-panels';
-import { ListTool, TextCaseTool, UrlTool } from './components/text-tool-panels';
-import {
-  Base64Tool,
-  CronTool,
-  HashTool,
-  HttpTool,
-  JsonTool,
-  JwtTool,
-  RegexTool,
-  TimestampTool,
-  UuidTool,
-} from './components/tool-panels';
-import { WeeklyReportTool } from './components/weekly-report-tool';
+import { lazy } from 'react';
+const GithubLookupTool = lazy(() =>
+  import('./components/public-lookup-tool-panels').then((module) => ({
+    default: module.GithubLookupTool,
+  })),
+);
+const NpmLookupTool = lazy(() =>
+  import('./components/public-lookup-tool-panels').then((module) => ({
+    default: module.NpmLookupTool,
+  })),
+);
+const RdapLookupTool = lazy(() =>
+  import('./components/public-lookup-tool-panels').then((module) => ({
+    default: module.RdapLookupTool,
+  })),
+);
+const HttpHeadersTool = lazy(() =>
+  import('./components/public-lookup-tool-panels').then((module) => ({
+    default: module.HttpHeadersTool,
+  })),
+);
+const JevTool = lazy(() =>
+  import('../features/jev/jev-tool').then((module) => ({ default: module.JevTool })),
+);
+const RadixTool = lazy(() =>
+  import('./components/developer-tool-panels').then((module) => ({ default: module.RadixTool })),
+);
+const CsvJsonTool = lazy(() =>
+  import('./components/data-inspection-tool-panels').then((module) => ({
+    default: module.CsvJsonTool,
+  })),
+);
+const JsonDiffTool = lazy(() =>
+  import('./components/data-inspection-tool-panels').then((module) => ({
+    default: module.JsonDiffTool,
+  })),
+);
+const Base64FileTool = lazy(() =>
+  import('./components/parity-file-base64-tool-panel').then((module) => ({
+    default: module.Base64FileTool,
+  })),
+);
+const CameraRecorderTool = lazy(() =>
+  import('./components/parity-camera-tool-panel').then((module) => ({
+    default: module.CameraRecorderTool,
+  })),
+);
+const DockerComposeTool = lazy(() =>
+  import('./components/parity-docker-compose-tool-panel').then((module) => ({
+    default: module.DockerComposeTool,
+  })),
+);
+const BenchmarkTool = lazy(() =>
+  import('./components/parity-math-tool-panels').then((module) => ({
+    default: module.BenchmarkTool,
+  })),
+);
+const EtaTool = lazy(() =>
+  import('./components/parity-math-tool-panels').then((module) => ({ default: module.EtaTool })),
+);
+const MathExpressionTool = lazy(() =>
+  import('./components/parity-math-tool-panels').then((module) => ({
+    default: module.MathExpressionTool,
+  })),
+);
+const StopwatchTool = lazy(() =>
+  import('./components/parity-math-tool-panels').then((module) => ({
+    default: module.StopwatchTool,
+  })),
+);
+const BasicAuthTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.BasicAuthTool,
+  })),
+);
+const ChmodTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.ChmodTool,
+  })),
+);
+const HmacTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({ default: module.HmacTool })),
+);
+const HtmlEntitiesTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.HtmlEntitiesTool,
+  })),
+);
+const NumeronymTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.NumeronymTool,
+  })),
+);
+const RomanNumeralTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.RomanNumeralTool,
+  })),
+);
+const TextDiffTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.TextDiffTool,
+  })),
+);
+const TextStatsTool = lazy(() =>
+  import('./components/parity-basics-tool-panels').then((module) => ({
+    default: module.TextStatsTool,
+  })),
+);
+const BinaryTextTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.BinaryTextTool,
+  })),
+);
+const RandomPortTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.RandomPortTool,
+  })),
+);
+const SlugifyTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.SlugifyTool,
+  })),
+);
+const TemperatureTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.TemperatureTool,
+  })),
+);
+const UlidTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.UlidTool,
+  })),
+);
+const UnicodeTextTool = lazy(() =>
+  import('./components/parity-converters-tool-panels').then((module) => ({
+    default: module.UnicodeTextTool,
+  })),
+);
+const EncryptTextTool = lazy(() =>
+  import('./components/parity-crypto-tool-panels').then((module) => ({
+    default: module.EncryptTextTool,
+  })),
+);
+const RsaKeyPairTool = lazy(() =>
+  import('./components/parity-crypto-tool-panels').then((module) => ({
+    default: module.RsaKeyPairTool,
+  })),
+);
+const TotpTool = lazy(() =>
+  import('./components/parity-crypto-tool-panels').then((module) => ({ default: module.TotpTool })),
+);
+const BcryptTool = lazy(() =>
+  import('./components/parity-crypto-advanced-tool-panels').then((module) => ({
+    default: module.BcryptTool,
+  })),
+);
+const Bip39MnemonicTool = lazy(() =>
+  import('./components/parity-crypto-advanced-tool-panels').then((module) => ({
+    default: module.Bip39MnemonicTool,
+  })),
+);
+const IbanTool = lazy(() =>
+  import('./components/parity-iban-tool-panel').then((module) => ({ default: module.IbanTool })),
+);
+const Ipv4AddressTool = lazy(() =>
+  import('./components/parity-network-tool-panels').then((module) => ({
+    default: module.Ipv4AddressTool,
+  })),
+);
+const Ipv4SubnetTool = lazy(() =>
+  import('./components/parity-network-tool-panels').then((module) => ({
+    default: module.Ipv4SubnetTool,
+  })),
+);
+const MacAddressTool = lazy(() =>
+  import('./components/parity-network-tool-panels').then((module) => ({
+    default: module.MacAddressTool,
+  })),
+);
+const Ipv4RangeTool = lazy(() =>
+  import('./components/parity-network-extra-tool-panels').then((module) => ({
+    default: module.Ipv4RangeTool,
+  })),
+);
+const Ipv6UlaTool = lazy(() =>
+  import('./components/parity-network-extra-tool-panels').then((module) => ({
+    default: module.Ipv6UlaTool,
+  })),
+);
+const EmailNormalizerTool = lazy(() =>
+  import('./components/parity-text-misc-tool-panels').then((module) => ({
+    default: module.EmailNormalizerTool,
+  })),
+);
+const LoremIpsumTool = lazy(() =>
+  import('./components/parity-text-misc-tool-panels').then((module) => ({
+    default: module.LoremIpsumTool,
+  })),
+);
+const RegexCheatsheetTool = lazy(() =>
+  import('./components/parity-text-misc-tool-panels').then((module) => ({
+    default: module.RegexCheatsheetTool,
+  })),
+);
+const TextMaskTool = lazy(() =>
+  import('./components/parity-text-misc-tool-panels').then((module) => ({
+    default: module.TextMaskTool,
+  })),
+);
+const OgMetaTool = lazy(() =>
+  import('./components/parity-web-data-tool-panels').then((module) => ({
+    default: module.OgMetaTool,
+  })),
+);
+const PercentageTool = lazy(() =>
+  import('./components/parity-web-data-tool-panels').then((module) => ({
+    default: module.PercentageTool,
+  })),
+);
+const SvgPlaceholderTool = lazy(() =>
+  import('./components/parity-web-data-tool-panels').then((module) => ({
+    default: module.SvgPlaceholderTool,
+  })),
+);
+const YamlFormatTool = lazy(() =>
+  import('./components/parity-web-data-tool-panels').then((module) => ({
+    default: module.YamlFormatTool,
+  })),
+);
+const YamlTomlTool = lazy(() =>
+  import('./components/parity-web-data-tool-panels').then((module) => ({
+    default: module.YamlTomlTool,
+  })),
+);
+const QrCodeTool = lazy(() =>
+  import('./components/parity-qr-tool-panels').then((module) => ({ default: module.QrCodeTool })),
+);
+const WifiQrCodeTool = lazy(() =>
+  import('./components/parity-qr-tool-panels').then((module) => ({
+    default: module.WifiQrCodeTool,
+  })),
+);
+const EmojiPickerTool = lazy(() =>
+  import('./components/parity-reference-more-tool-panels').then((module) => ({
+    default: module.EmojiPickerTool,
+  })),
+);
+const GitCommandsTool = lazy(() =>
+  import('./components/parity-reference-more-tool-panels').then((module) => ({
+    default: module.GitCommandsTool,
+  })),
+);
+const NatoAlphabetTool = lazy(() =>
+  import('./components/parity-reference-more-tool-panels').then((module) => ({
+    default: module.NatoAlphabetTool,
+  })),
+);
+const OutlookSafeLinkTool = lazy(() =>
+  import('./components/parity-reference-more-tool-panels').then((module) => ({
+    default: module.OutlookSafeLinkTool,
+  })),
+);
+const DeviceInformationTool = lazy(() =>
+  import('./components/parity-web-reference-tool-panels').then((module) => ({
+    default: module.DeviceInformationTool,
+  })),
+);
+const HttpStatusTool = lazy(() =>
+  import('./components/parity-web-reference-tool-panels').then((module) => ({
+    default: module.HttpStatusTool,
+  })),
+);
+const KeycodeTool = lazy(() =>
+  import('./components/parity-web-reference-tool-panels').then((module) => ({
+    default: module.KeycodeTool,
+  })),
+);
+const MimeTypeTool = lazy(() =>
+  import('./components/parity-web-reference-tool-panels').then((module) => ({
+    default: module.MimeTypeTool,
+  })),
+);
+const JsonToXmlTool = lazy(() =>
+  import('./components/parity-xml-tool-panels').then((module) => ({
+    default: module.JsonToXmlTool,
+  })),
+);
+const XmlFormatTool = lazy(() =>
+  import('./components/parity-xml-tool-panels').then((module) => ({
+    default: module.XmlFormatTool,
+  })),
+);
+const XmlToJsonTool = lazy(() =>
+  import('./components/parity-xml-tool-panels').then((module) => ({
+    default: module.XmlToJsonTool,
+  })),
+);
+const ColorTool = lazy(() =>
+  import('./components/second-batch-tool-panels').then((module) => ({ default: module.ColorTool })),
+);
+const MarkdownTool = lazy(() =>
+  import('./components/second-batch-tool-panels').then((module) => ({
+    default: module.MarkdownTool,
+  })),
+);
+const PasswordTool = lazy(() =>
+  import('./components/second-batch-tool-panels').then((module) => ({
+    default: module.PasswordTool,
+  })),
+);
+const SqlTool = lazy(() =>
+  import('./components/second-batch-tool-panels').then((module) => ({ default: module.SqlTool })),
+);
+const UserAgentTool = lazy(() =>
+  import('./components/second-batch-tool-panels').then((module) => ({
+    default: module.UserAgentTool,
+  })),
+);
+const JsonTomlTool = lazy(() =>
+  import('./components/structured-data-tool-panels').then((module) => ({
+    default: module.JsonTomlTool,
+  })),
+);
+const YamlJsonTool = lazy(() =>
+  import('./components/structured-data-tool-panels').then((module) => ({
+    default: module.YamlJsonTool,
+  })),
+);
+const ListTool = lazy(() =>
+  import('./components/text-tool-panels').then((module) => ({ default: module.ListTool })),
+);
+const TextCaseTool = lazy(() =>
+  import('./components/text-tool-panels').then((module) => ({ default: module.TextCaseTool })),
+);
+const UrlTool = lazy(() =>
+  import('./components/text-tool-panels').then((module) => ({ default: module.UrlTool })),
+);
+const Base64Tool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.Base64Tool })),
+);
+const CronTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.CronTool })),
+);
+const HashTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.HashTool })),
+);
+const HttpTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.HttpTool })),
+);
+const JsonTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.JsonTool })),
+);
+const JwtTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.JwtTool })),
+);
+const RegexTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.RegexTool })),
+);
+const TimestampTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.TimestampTool })),
+);
+const UuidTool = lazy(() =>
+  import('./components/tool-panels').then((module) => ({ default: module.UuidTool })),
+);
+const WeeklyReportTool = lazy(() =>
+  import('./components/weekly-report-tool').then((module) => ({
+    default: module.WeeklyReportTool,
+  })),
+);
 import type { ToolCategory, ToolDefinition } from './types';
+const PhoneNumberTool = lazy(() =>
+  import('./components/parity-phone-tool-panel').then((module) => ({
+    default: module.PhoneNumberTool,
+  })),
+);
+const HtmlEditorTool = lazy(() =>
+  import('./components/parity-html-editor-tool-panel').then((module) => ({
+    default: module.HtmlEditorTool,
+  })),
+);
+const TokenGeneratorTool = lazy(() =>
+  import('./components/parity-small-gaps-tool-panels').then((module) => ({
+    default: module.TokenGeneratorTool,
+  })),
+);
+const PasswordStrengthTool = lazy(() =>
+  import('./components/parity-small-gaps-tool-panels').then((module) => ({
+    default: module.PasswordStrengthTool,
+  })),
+);
+const AsciiTextTool = lazy(() =>
+  import('./components/parity-small-gaps-tool-panels').then((module) => ({
+    default: module.AsciiTextTool,
+  })),
+);
+const MacVendorTool = lazy(() =>
+  import('./components/parity-mac-vendor-tool-panel').then((module) => ({
+    default: module.MacVendorTool,
+  })),
+);
+const PdfSignatureTool = lazy(() =>
+  import('./components/parity-pdf-signature-tool-panel').then((module) => ({
+    default: module.PdfSignatureTool,
+  })),
+);
+const IpLookupTool = lazy(() =>
+  import('./components/network-lookup-tool-panels').then((module) => ({
+    default: module.IpLookupTool,
+  })),
+);
+const DnsLookupTool = lazy(() =>
+  import('./components/network-lookup-tool-panels').then((module) => ({
+    default: module.DnsLookupTool,
+  })),
+);
 export const tools: ToolDefinition[] = [
   {
     name: 'JSON',
@@ -646,6 +998,356 @@ export const tools: ToolDefinition[] = [
     description: '查看按键事件的 key、code 与修饰键。',
     icon: CaseSensitive,
     component: KeycodeTool,
+  },
+  {
+    name: 'Lorem Ipsum 生成',
+    slug: 'lorem-ipsum',
+    path: '/tools/lorem-ipsum',
+    category: '数据处理',
+    keywords: ['Lorem Ipsum', '占位文本', '段落'],
+    description: '生成指定段落数量的占位文本。',
+    icon: FileText,
+    component: LoremIpsumTool,
+  },
+  {
+    name: '文本脱敏',
+    slug: 'text-mask',
+    path: '/tools/text-mask',
+    category: '数据处理',
+    keywords: ['文本脱敏', '遮蔽', '敏感信息'],
+    description: '保留两端字符，遮蔽中间内容。',
+    icon: LockKeyhole,
+    component: TextMaskTool,
+  },
+  {
+    name: 'Email 标准化',
+    slug: 'email-normalizer',
+    path: '/tools/email-normalizer',
+    category: '数据处理',
+    keywords: ['Email 标准化', '邮箱', '域名'],
+    description: '去除两端空白并统一邮箱域名大小写。',
+    icon: CaseSensitive,
+    component: EmailNormalizerTool,
+  },
+  {
+    name: '正则速查',
+    slug: 'regex-cheatsheet',
+    path: '/tools/regex-cheatsheet',
+    category: '开发辅助',
+    keywords: ['正则速查', 'regex', 'cheatsheet', 'JavaScript'],
+    description: '查阅常用 JavaScript 正则表达式语法。',
+    icon: Regex,
+    component: RegexCheatsheetTool,
+  },
+  {
+    name: 'IPv4 范围展开',
+    slug: 'ipv4-range',
+    path: '/tools/ipv4-range',
+    category: '网络工具',
+    keywords: ['IPv4 范围', 'CIDR', '起始地址', '结束地址'],
+    description: '将 IPv4 地址范围拆分为最少的 CIDR 块。',
+    icon: Globe2,
+    component: Ipv4RangeTool,
+  },
+  {
+    name: 'IPv6 ULA 前缀',
+    slug: 'ipv6-ula',
+    path: '/tools/ipv6-ula',
+    category: '网络工具',
+    keywords: ['IPv6 ULA', '本地地址', '前缀'],
+    description: '生成随机的本地 IPv6 /48 前缀。',
+    icon: Globe2,
+    component: Ipv6UlaTool,
+  },
+  {
+    name: 'Base64 文件转换',
+    slug: 'base64-file',
+    path: '/tools/base64-file',
+    category: '编码转换',
+    keywords: ['Base64 文件', 'Data URL', '文件编码'],
+    description: '将本地文件转换为 Base64 Data URL。',
+    icon: FileText,
+    component: Base64FileTool,
+  },
+  {
+    name: '二维码生成',
+    slug: 'qr-code',
+    path: '/tools/qr-code',
+    category: '开发辅助',
+    keywords: ['二维码', 'QR Code', 'SVG'],
+    description: '从文本生成可下载的 SVG 二维码。',
+    icon: Braces,
+    component: QrCodeTool,
+  },
+  {
+    name: 'WiFi 二维码',
+    slug: 'wifi-qr-code',
+    path: '/tools/wifi-qr-code',
+    category: '网络工具',
+    keywords: ['WiFi 二维码', 'SSID', '无线网络', 'QR Code'],
+    description: '生成用于连接 WiFi 的二维码。',
+    icon: Globe2,
+    component: WifiQrCodeTool,
+  },
+  {
+    name: '数学表达式计算',
+    slug: 'math-expression',
+    path: '/tools/math-expression',
+    category: '开发辅助',
+    keywords: ['数学表达式', '计算器', 'sqrt', 'sin'],
+    description: '安全解析并计算常见数学表达式。',
+    icon: Binary,
+    component: MathExpressionTool,
+  },
+  {
+    name: 'ETA 计算',
+    slug: 'eta',
+    path: '/tools/eta',
+    category: '日期时间',
+    keywords: ['ETA', '预计耗时', '距离', '速度'],
+    description: '根据距离和速度估算耗时。',
+    icon: Clock3,
+    component: EtaTool,
+  },
+  {
+    name: '秒表',
+    slug: 'stopwatch',
+    path: '/tools/stopwatch',
+    category: '日期时间',
+    keywords: ['秒表', '计时', '暂停'],
+    description: '开始、暂停和重置浏览器内秒表。',
+    icon: Clock3,
+    component: StopwatchTool,
+  },
+  {
+    name: '基准测试',
+    slug: 'benchmark',
+    path: '/tools/benchmark',
+    category: '开发辅助',
+    keywords: ['基准测试', 'Benchmark', '性能'],
+    description: '在固定场景中粗略测量浏览器执行时间。',
+    icon: FlaskConical,
+    component: BenchmarkTool,
+  },
+  {
+    name: 'NATO 字母表',
+    slug: 'nato-alphabet',
+    path: '/tools/nato-alphabet',
+    category: '数据处理',
+    keywords: ['NATO', '字母表', '拼读'],
+    description: '在普通文本和 NATO 拼读字母之间转换。',
+    icon: CaseSensitive,
+    component: NatoAlphabetTool,
+  },
+  {
+    name: 'Outlook Safe Links 解码',
+    slug: 'outlook-safe-link',
+    path: '/tools/outlook-safe-link',
+    category: '编码转换',
+    keywords: ['Outlook Safe Links', '安全链接', '解码'],
+    description: '提取 Outlook Safe Links 包装的目标地址。',
+    icon: Link2,
+    component: OutlookSafeLinkTool,
+  },
+  {
+    name: 'Git 命令速查',
+    slug: 'git-commands',
+    path: '/tools/git-commands',
+    category: '开发辅助',
+    keywords: ['Git 命令', '速查', '版本控制'],
+    description: '搜索常用 Git 命令及其用途。',
+    icon: FileCode2,
+    component: GitCommandsTool,
+  },
+  {
+    name: 'Emoji 选择器',
+    slug: 'emoji-picker',
+    path: '/tools/emoji-picker',
+    category: '开发辅助',
+    keywords: ['Emoji', '表情', 'Unicode'],
+    description: '搜索并复制常用 Emoji。',
+    icon: Braces,
+    component: EmojiPickerTool,
+  },
+  {
+    name: 'IBAN 校验',
+    slug: 'iban',
+    path: '/tools/iban',
+    category: '开发辅助',
+    keywords: ['IBAN', '国际银行账号', 'MOD 97'],
+    description: '本地检查 IBAN 国家格式、长度与校验位。',
+    icon: ShieldCheck,
+    component: IbanTool,
+  },
+  {
+    name: 'Bcrypt 哈希',
+    slug: 'bcrypt',
+    path: '/tools/bcrypt',
+    category: '开发辅助',
+    keywords: ['Bcrypt', '密码哈希', '验证'],
+    description: '在本地生成与验证 Bcrypt 密码哈希。',
+    icon: LockKeyhole,
+    component: BcryptTool,
+  },
+  {
+    name: 'BIP39 助记词',
+    slug: 'bip39-mnemonic',
+    path: '/tools/bip39-mnemonic',
+    category: '开发辅助',
+    keywords: ['BIP39', '助记词', '种子'],
+    description: '生成、校验英文助记词并派生种子。',
+    icon: KeyRound,
+    component: Bip39MnemonicTool,
+  },
+  {
+    name: '摄像头拍照与录像',
+    slug: 'camera-recorder',
+    path: '/tools/camera-recorder',
+    category: '开发辅助',
+    keywords: ['摄像头', '拍照', '录像', 'Camera'],
+    description: '经授权后在浏览器内拍照或录制短视频。',
+    icon: MonitorSmartphone,
+    component: CameraRecorderTool,
+  },
+  {
+    name: 'Docker Run 转 Compose',
+    slug: 'docker-compose',
+    path: '/tools/docker-compose',
+    category: '开发辅助',
+    keywords: ['Docker', 'Compose', 'docker run', 'YAML'],
+    description: '将常用 docker run 参数转换为 Compose YAML。',
+    icon: FileCode2,
+    component: DockerComposeTool,
+  },
+  {
+    name: '电话号码解析与格式化',
+    slug: 'phone-number',
+    path: '/tools/phone-number',
+    category: '数据处理',
+    keywords: ['电话号码', 'E.164', 'Phone', '地区'],
+    description: '按地区解析和格式化国际电话号码。',
+    icon: MonitorSmartphone,
+    component: PhoneNumberTool,
+  },
+  {
+    name: 'HTML 编辑与预览',
+    slug: 'html-editor',
+    path: '/tools/html-editor',
+    category: '开发辅助',
+    keywords: ['HTML 编辑', 'WYSIWYG', '富文本'],
+    description: '可视化编辑富文本并输出安全清理的 HTML。',
+    icon: FileCode2,
+    component: HtmlEditorTool,
+  },
+  {
+    name: '令牌生成',
+    slug: 'token-generator',
+    path: '/tools/token-generator',
+    category: '开发辅助',
+    keywords: ['令牌生成', 'Token', '安全随机'],
+    description: '按指定长度和字符集生成随机令牌。',
+    icon: KeyRound,
+    component: TokenGeneratorTool,
+  },
+  {
+    name: '密码强度提示',
+    slug: 'password-strength',
+    path: '/tools/password-strength',
+    category: '开发辅助',
+    keywords: ['密码强度', '密码分析', '安全'],
+    description: '用启发式规则给出密码强度提示。',
+    icon: ShieldCheck,
+    component: PasswordStrengthTool,
+  },
+  {
+    name: 'ASCII 字画',
+    slug: 'ascii-text',
+    path: '/tools/ascii-text',
+    category: '数据处理',
+    keywords: ['ASCII 字画', '文字绘制', '字符画'],
+    description: '把英文字母和数字绘制成五行字符画。',
+    icon: FileText,
+    component: AsciiTextTool,
+  },
+  {
+    name: 'MAC 厂商查询',
+    slug: 'mac-vendor',
+    path: '/tools/mac-vendor',
+    category: '网络工具',
+    keywords: ['MAC 厂商', 'OUI', 'Vendor'],
+    description: '用本地 OUI 数据库查询 MAC 前缀对应的厂商。',
+    icon: MonitorSmartphone,
+    component: MacVendorTool,
+  },
+  {
+    name: 'PDF 签名证书查看',
+    slug: 'pdf-signature',
+    path: '/tools/pdf-signature',
+    category: '开发辅助',
+    keywords: ['PDF 签名', '证书', '数字签名'],
+    description: '本地查看 PDF 嵌入证书，不验证签名有效性。',
+    icon: ShieldCheck,
+    component: PdfSignatureTool,
+  },
+  {
+    name: 'IP 查询',
+    slug: 'ip-lookup',
+    path: '/tools/ip-lookup',
+    category: '网络工具',
+    keywords: ['IP 查询', '公网 IP', '归属地', '运营商', 'ASN', 'IPv6'],
+    description: '查询公网 IP 的归属地、运营商、ASN 与时区。',
+    icon: Globe2,
+    component: IpLookupTool,
+  },
+  {
+    name: 'DNS 查询',
+    slug: 'dns-lookup',
+    path: '/tools/dns-lookup',
+    category: '网络工具',
+    keywords: ['DNS 查询', '域名解析', 'A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME'],
+    description: '查询域名的 DNS 记录、记录值与 TTL。',
+    icon: Globe2,
+    component: DnsLookupTool,
+  },
+  {
+    name: 'RDAP / WHOIS 查询',
+    slug: 'rdap-lookup',
+    path: '/tools/rdap-lookup',
+    category: '网络工具',
+    keywords: ['WHOIS', 'RDAP', '注册商', '域名到期'],
+    description: '通过 RDAP 查询域名注册信息、状态和域名服务器。',
+    icon: Globe2,
+    component: RdapLookupTool,
+  },
+  {
+    name: 'HTTP 响应头',
+    slug: 'http-headers',
+    path: '/tools/http-headers',
+    category: '网络工具',
+    keywords: ['响应头', 'headers', '缓存', '重定向', '安全头'],
+    description: '只读查询公网 HTTPS 状态、跳转链和响应头。',
+    icon: Globe2,
+    component: HttpHeadersTool,
+  },
+  {
+    name: 'GitHub 仓库查询',
+    slug: 'github-lookup',
+    path: '/tools/github-lookup',
+    category: '开发辅助',
+    keywords: ['GitHub', 'Stars', 'Release', '许可证'],
+    description: '查询公开仓库信息、许可证和最新 Release。',
+    icon: FileCode2,
+    component: GithubLookupTool,
+  },
+  {
+    name: 'npm 包查询',
+    slug: 'npm-lookup',
+    path: '/tools/npm-lookup',
+    category: '开发辅助',
+    keywords: ['npm', '包依赖', '版本', '下载量'],
+    description: '查询 npm 最新版本、依赖和上周下载量。',
+    icon: FileCode2,
+    component: NpmLookupTool,
   },
 ];
 export const findTool = (slug: string) => tools.find((tool) => tool.slug === slug);

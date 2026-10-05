@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Check, Copy, LoaderCircle, Plus, Send, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -17,7 +17,7 @@ import {
   OptionSelect,
   Textarea,
 } from '../../components/ui';
-import { sendHttpRequest } from '../../features/http/client';
+import { getHttpProxyStatus, sendHttpRequest } from '../../features/http/client';
 import type { HttpMethod } from '../../features/http/types';
 import { copyText } from '../../lib/utils';
 import { decodeBase64Utf8, encodeBase64Utf8 } from '../lib/base64';
@@ -459,6 +459,11 @@ export function RegexTool() {
 }
 type HeaderRow = { id: number; key: string; value: string };
 export function HttpTool() {
+  const statusQuery = useQuery({
+    queryKey: ['http-proxy-status'],
+    queryFn: getHttpProxyStatus,
+    retry: false,
+  });
   const [url, setUrl] = useState('https://example.com');
   const [method, setMethod] = useState<HttpMethod>('GET');
   const [body, setBody] = useState('');
@@ -482,15 +487,44 @@ export function HttpTool() {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
       <Card className="grid gap-5">
+        <div
+          role="status"
+          className="border-border bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2 text-sm"
+        >
+          <span>
+            {statusQuery.isPending
+              ? '正在检测本地代理…'
+              : statusQuery.data?.available
+                ? `本地代理已连接 · 超时 ${statusQuery.data.timeoutMs / 1000} 秒 · 响应上限 ${statusQuery.data.maxResponseBytes >= 1024 * 1024 ? `${statusQuery.data.maxResponseBytes / (1024 * 1024)} MiB` : `${statusQuery.data.maxResponseBytes / 1024} KiB`}`
+                : '本地代理未连接；请在本机启动 Spring Boot 服务'}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => void statusQuery.refetch()}
+            disabled={statusQuery.isFetching}
+          >
+            重新检测
+          </Button>
+        </div>
         <div className="grid gap-3 sm:grid-cols-[8rem_1fr]">
           <Field label="方法">
             <OptionSelect
               aria-label="方法"
               value={method}
               onValueChange={(value) => setMethod(value as HttpMethod)}
-              options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].map(
-                (value) => ({ value, label: value }),
-              )}
+              options={(
+                statusQuery.data?.allowedMethods ?? [
+                  'GET',
+                  'POST',
+                  'PUT',
+                  'PATCH',
+                  'DELETE',
+                  'HEAD',
+                  'OPTIONS',
+                ]
+              ).map((value) => ({ value, label: value }))}
             />
           </Field>
           <Field label="请求 URL">
@@ -551,7 +585,15 @@ export function HttpTool() {
             />
           </Field>
         )}
-        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !url.trim()}>
+        <Button
+          onClick={() => mutation.mutate()}
+          disabled={
+            mutation.isPending ||
+            !url.trim() ||
+            !statusQuery.data?.available ||
+            !statusQuery.data.allowedMethods.includes(method)
+          }
+        >
           {mutation.isPending ? (
             <LoaderCircle className="animate-spin" size={16} />
           ) : (

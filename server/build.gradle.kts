@@ -18,12 +18,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.5.2")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

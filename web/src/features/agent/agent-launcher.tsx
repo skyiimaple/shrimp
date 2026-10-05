@@ -1,7 +1,10 @@
 import { Bot } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { AgentDialog } from './agent-dialog';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Button } from '../../components/ui';
+
+const AgentDialog = lazy(() =>
+  import('./agent-dialog').then((module) => ({ default: module.AgentDialog })),
+);
 
 export function AgentLauncher() {
   const [open, setOpen] = useState(false);
@@ -19,12 +22,14 @@ export function AgentLauncher() {
         <span className="hidden sm:inline">Agent 聊天</span>
       </Button>
       {open && (
-        <AgentDialog
-          onClose={() => {
-            setOpen(false);
-            window.setTimeout(() => triggerRef.current?.focus(), 0);
-          }}
-        />
+        <Suspense fallback={null}>
+          <AgentDialog
+            onClose={() => {
+              setOpen(false);
+              window.setTimeout(() => triggerRef.current?.focus(), 0);
+            }}
+          />
+        </Suspense>
       )}
     </>
   );

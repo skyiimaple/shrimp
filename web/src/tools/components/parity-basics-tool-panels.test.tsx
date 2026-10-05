@@ -53,10 +53,10 @@ describe('IT-Tools 对标基础卡片', () => {
   it('其余计算卡片能输出可复制结果', async () => {
     const user = userEvent.setup();
     const views = [
-      [<ChmodTool />, '计算权限', 'rwxr-xr-x'],
-      [<RomanNumeralTool />, '转为罗马数字', 'MCMXCIV'],
-      [<TextStatsTool />, '统计文本', '字符'],
-      [<NumeronymTool />, '生成缩写', 'i18n'],
+      [<ChmodTool key="chmod" />, '计算权限', 'rwxr-xr-x'],
+      [<RomanNumeralTool key="roman" />, '转为罗马数字', 'MCMXCIV'],
+      [<TextStatsTool key="stats" />, '统计文本', '字符'],
+      [<NumeronymTool key="numeronym" />, '生成缩写', 'i18n'],
     ] as const;
     for (const [component, button, expected] of views) {
       const view = render(component);

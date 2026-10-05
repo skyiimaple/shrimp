@@ -8,8 +8,11 @@ describe('global Agent entry', () => {
   it('opens and closes the dialog without routing away', async () => {
     const user = userEvent.setup();
     render(<AgentLauncher />);
+    expect(screen.queryByRole('dialog', { name: 'Agent 聊天' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '打开 Agent 聊天' }));
-    expect(screen.getByRole('dialog', { name: 'Agent 聊天' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: 'Agent 聊天' })).toBeInTheDocument(),
+    );
     expect(screen.getByRole('dialog', { name: 'Agent 聊天' }).parentElement).toBe(document.body);
     expect(screen.getByRole('dialog', { name: 'Agent 聊天' })).toContainElement(
       document.activeElement as HTMLElement,
@@ -26,7 +29,9 @@ describe('global Agent entry', () => {
     render(<AgentLauncher />);
     const launcher = screen.getByRole('button', { name: '打开 Agent 聊天' });
     await user.click(launcher);
-    expect(screen.getByRole('dialog', { name: 'Agent 聊天' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: 'Agent 聊天' })).toBeInTheDocument(),
+    );
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Agent 聊天' })).toBeNull());
     await waitFor(() => expect(launcher).toHaveFocus());

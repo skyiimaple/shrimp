@@ -6,8 +6,9 @@ import { Input } from './input';
 import { Label } from './label';
 import { Textarea } from './textarea';
 import { OptionSelect } from './option-select';
+import { FileDropzone } from './file-dropzone';
 
-export { Button, Card, Input, OptionSelect, Textarea };
+export { Button, Card, FileDropzone, Input, OptionSelect, Textarea };
 
 export function SecondaryButton({ className, ...props }: ButtonProps) {
   return <Button variant="outline" className={className} {...props} />;

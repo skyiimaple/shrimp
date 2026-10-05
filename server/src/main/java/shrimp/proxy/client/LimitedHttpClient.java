@@ -5,44 +5,34 @@ import shrimp.proxy.api.HttpSendResponse;
 import shrimp.proxy.config.ProxyProperties;
 import shrimp.proxy.security.HeaderSanitizer;
 import shrimp.proxy.security.TargetValidator;
+import shrimp.proxy.api.RequestBodyTooLargeException;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Service
 public class LimitedHttpClient {
+    private static final Set<String> CROSS_ORIGIN_CREDENTIAL_HEADERS = Set.of(
+            "authorization", "cookie", "cookie2", "x-api-key", "x-auth-token",
+            "x-access-token", "x-authorization");
     private final ProxyProperties properties;
     private final TargetValidator targetValidator;
     private final HeaderSanitizer headerSanitizer;
-    private final HttpClient httpClient;
-    private final ResponseBodyReader bodyReader = new ResponseBodyReader();
+    private final PinnedHttpTransport transport;
 
     public LimitedHttpClient(
             ProxyProperties properties,
             TargetValidator targetValidator,
-            HeaderSanitizer headerSanitizer) {
+            HeaderSanitizer headerSanitizer,
+            PinnedHttpTransport transport) {
         this.properties = properties;
         this.targetValidator = targetValidator;
         this.headerSanitizer = headerSanitizer;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(properties.timeout())
-                .followRedirects(HttpClient.Redirect.NEVER)
-                .build();
+        this.transport = transport;
     }
 
     public HttpSendResponse send(HttpSendRequest input) {
@@ -50,82 +40,50 @@ public class LimitedHttpClient {
         var deadline = startedAt + properties.timeout().toNanos();
         var uri = parseUri(input.url());
         var method = input.method().toUpperCase(Locale.ROOT);
-        var body = input.body();
+        var body = input.decodedBody();
+        if (body != null && body.length > properties.maxRequestBytes()) {
+            throw new RequestBodyTooLargeException();
+        }
         var headers = headerSanitizer.sanitize(input.headers());
         int redirects = 0;
+        URI previousHop = null;
 
         while (true) {
             var target = targetValidator.validate(uri);
-            var request = buildRequest(target.uri(), method, body, headers, remaining(deadline));
-            HttpResponse<java.io.InputStream> response;
-            try {
-                response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            } catch (HttpTimeoutException exception) {
-                throw new UpstreamTimeoutException(exception);
-            } catch (IOException exception) {
-                throw new UpstreamConnectionException(exception);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                throw new UpstreamConnectionException(exception);
+            if (previousHop != null && !sameOrigin(previousHop, target.uri())) {
+                headers.keySet().removeIf(name -> CROSS_ORIGIN_CREDENTIAL_HEADERS.contains(
+                        name.toLowerCase(Locale.ROOT)));
             }
-
-            var location = response.headers().firstValue("location");
-            if (isRedirect(response.statusCode()) && location.isPresent()) {
-                closeQuietly(response.body());
+            var response = transport.send(target, method, headers, body,
+                    remaining(deadline), properties.maxResponseBytes(),
+                    properties.maxResponseHeaders(), properties.maxResponseHeaderLineLength());
+            if (response.location() != null) {
                 if (redirects++ >= properties.maxRedirects()) {
                     throw new TooManyRedirectsException();
                 }
-                uri = target.uri().resolve(location.get());
-                if (response.statusCode() == 303 || ((response.statusCode() == 301 || response.statusCode() == 302)
+                previousHop = target.uri();
+                uri = target.uri().resolve(response.location());
+                if (response.status() == 303 || ((response.status() == 301 || response.status() == 302)
                         && method.equals("POST"))) {
                     method = "GET";
                     body = null;
                 }
                 continue;
             }
-
-            var encodedBody = readBody(response, deadline);
             var elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt);
-            return new HttpSendResponse(response.statusCode(), normalizeHeaders(response.headers().map()),
-                    encodedBody.body(), encodedBody.encoding(), elapsedMs);
+            return new HttpSendResponse(response.status(), response.headers(),
+                    response.body().body(), response.body().encoding(), elapsedMs);
         }
     }
 
-    private ResponseBodyReader.EncodedBody readBody(HttpResponse<java.io.InputStream> response, long deadline) {
-        var remaining = remaining(deadline);
-        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            var future = executor.submit(() -> {
-                try (var body = response.body()) {
-                    return bodyReader.read(body, properties.maxResponseBytes(),
-                            response.headers().firstValue("content-type"));
-                }
-            });
-            return future.get(remaining.toNanos(), TimeUnit.NANOSECONDS);
-        } catch (TimeoutException exception) {
-            closeQuietly(response.body());
-            throw new UpstreamTimeoutException(exception);
-        } catch (ExecutionException exception) {
-            if (exception.getCause() instanceof ResponseTooLargeException tooLarge) {
-                throw tooLarge;
-            }
-            if (exception.getCause() instanceof IOException ioException) {
-                throw new UpstreamConnectionException(ioException);
-            }
-            throw new UpstreamConnectionException(exception);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new UpstreamConnectionException(exception);
-        }
+    private boolean sameOrigin(URI left, URI right) {
+        return left.getScheme().equalsIgnoreCase(right.getScheme())
+                && left.getHost().equalsIgnoreCase(right.getHost())
+                && effectivePort(left) == effectivePort(right);
     }
 
-    private HttpRequest buildRequest(URI uri, String method, String body,
-                                     org.springframework.http.HttpHeaders headers, Duration timeout) {
-        var builder = HttpRequest.newBuilder(uri).timeout(timeout);
-        headers.forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
-        var publisher = body == null
-                ? HttpRequest.BodyPublishers.noBody()
-                : HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8);
-        return builder.method(method, publisher).build();
+    private int effectivePort(URI uri) {
+        return uri.getPort() == -1 ? ("https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80) : uri.getPort();
     }
 
     private Duration remaining(long deadline) {
@@ -144,21 +102,4 @@ public class LimitedHttpClient {
         }
     }
 
-    private boolean isRedirect(int status) {
-        return status == 301 || status == 302 || status == 303 || status == 307 || status == 308;
-    }
-
-    private Map<String, List<String>> normalizeHeaders(Map<String, List<String>> headers) {
-        var result = new LinkedHashMap<String, List<String>>();
-        headers.forEach((name, values) -> result.put(name.toLowerCase(Locale.ROOT), List.copyOf(values)));
-        return Map.copyOf(result);
-    }
-
-    private void closeQuietly(java.io.InputStream stream) {
-        try {
-            stream.close();
-        } catch (IOException ignored) {
-            // Closing a discarded response is best-effort.
-        }
-    }
 }

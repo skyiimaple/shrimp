@@ -15,6 +15,8 @@ describe('周报生成工具', () => {
     expect(screen.queryByRole('checkbox', { name: '张三' })).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('成员姓名'), '张三');
     await user.click(screen.getByRole('button', { name: '添加成员' }));
+    expect(screen.queryByRole('checkbox', { name: '张三' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '选择团队成员' }));
     expect(screen.getByRole('checkbox', { name: '张三' })).toBeChecked();
   });
 
@@ -23,10 +25,12 @@ describe('周报生成工具', () => {
     const view = render(<WeeklyReportTool />);
     await user.type(screen.getByLabelText('成员姓名'), '张三{Enter}');
     await user.click(screen.getByRole('button', { name: '重置全部' }));
+    await user.click(screen.getByRole('button', { name: '选择团队成员' }));
     expect(screen.getByRole('checkbox', { name: '张三' })).toBeInTheDocument();
     view.unmount();
 
     const again = render(<WeeklyReportTool />);
+    await user.click(screen.getByRole('button', { name: '选择团队成员' }));
     const saved = screen.getByRole('checkbox', { name: '张三' });
     expect(saved).not.toBeChecked();
     await user.click(saved);
@@ -34,7 +38,22 @@ describe('周报生成工具', () => {
     await user.click(screen.getByRole('button', { name: '删除成员 张三' }));
     again.unmount();
     render(<WeeklyReportTool />);
+    await user.click(screen.getByRole('button', { name: '选择团队成员' }));
     expect(screen.queryByRole('checkbox', { name: '张三' })).not.toBeInTheDocument();
+  });
+  it('多选下拉可用 Escape 关闭，并保留选中的成员', async () => {
+    const user = userEvent.setup();
+    render(<WeeklyReportTool />);
+    await user.type(screen.getByLabelText('成员姓名'), '张三{Enter}李四{Enter}');
+    const trigger = screen.getByRole('button', { name: '选择团队成员' });
+    expect(trigger).toHaveTextContent('张三、李四');
+    await user.click(trigger);
+    expect(screen.getByRole('checkbox', { name: '张三' })).toBeChecked();
+    await user.click(screen.getByRole('checkbox', { name: '李四' }));
+    expect(trigger).toHaveTextContent('张三');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('checkbox', { name: '张三' })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 
   it('使用精确匹配的成员生成周报', async () => {

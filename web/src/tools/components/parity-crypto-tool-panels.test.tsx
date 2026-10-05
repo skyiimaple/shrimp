@@ -10,7 +10,11 @@ describe('浏览器加密卡片', () => {
     fireEvent.change(screen.getByLabelText('输入文本或密文'), { target: { value: 'hello' } });
     fireEvent.change(screen.getByLabelText('口令'), { target: { value: 'password' } });
     await user.click(screen.getByRole('button', { name: '加密文本' }));
-    await waitFor(() => expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toMatch(/^shrimp:aes-gcm:v1:/));
+    await waitFor(() =>
+      expect((screen.getByLabelText('转换结果') as HTMLTextAreaElement).value).toMatch(
+        /^shrimp:aes-gcm:v1:/,
+      ),
+    );
     fireEvent.change(screen.getByLabelText('输入文本或密文'), { target: { value: 'new' } });
     expect(screen.getByLabelText('转换结果')).toHaveValue('');
   });
@@ -19,7 +23,9 @@ describe('浏览器加密卡片', () => {
     const user = userEvent.setup();
     render(<TotpTool />);
     await user.click(screen.getByRole('button', { name: '生成密钥' }));
-    expect((screen.getByLabelText('Base32 密钥') as HTMLInputElement).value).toMatch(/^[A-Z2-7]{32}$/);
+    expect((screen.getByLabelText('Base32 密钥') as HTMLInputElement).value).toMatch(
+      /^[A-Z2-7]{32}$/,
+    );
     await user.click(screen.getByRole('button', { name: '生成验证码' }));
     expect((screen.getByLabelText('验证码') as HTMLTextAreaElement).value).toMatch(/^\d{6}$/);
   });
@@ -28,7 +34,13 @@ describe('浏览器加密卡片', () => {
     const user = userEvent.setup();
     render(<RsaKeyPairTool />);
     await user.click(screen.getByRole('button', { name: '生成 RSA 密钥对' }));
-    await waitFor(() => expect((screen.getByLabelText('公钥 PEM') as HTMLTextAreaElement).value).toContain('BEGIN PUBLIC KEY'));
-    expect((screen.getByLabelText('私钥 PEM') as HTMLTextAreaElement).value).toContain('BEGIN PRIVATE KEY');
+    await waitFor(() =>
+      expect((screen.getByLabelText('公钥 PEM') as HTMLTextAreaElement).value).toContain(
+        'BEGIN PUBLIC KEY',
+      ),
+    );
+    expect((screen.getByLabelText('私钥 PEM') as HTMLTextAreaElement).value).toContain(
+      'BEGIN PRIVATE KEY',
+    );
   });
 });

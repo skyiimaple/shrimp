@@ -14,17 +14,29 @@ export function generateLoremIpsum(paragraphCount: number): string {
   if (!Number.isInteger(paragraphCount) || paragraphCount < 1 || paragraphCount > 20) {
     throw new Error('段落数量须为 1 至 20 的整数');
   }
-  return Array.from({ length: paragraphCount }, (_, index) => loremParagraphs[index % loremParagraphs.length]).join('\n\n');
+  return Array.from(
+    { length: paragraphCount },
+    (_, index) => loremParagraphs[index % loremParagraphs.length],
+  ).join('\n\n');
 }
 
 export function maskText(input: string, keepStart: number, keepEnd: number): string {
-  if (!Number.isSafeInteger(keepStart) || keepStart < 0 || !Number.isSafeInteger(keepEnd) || keepEnd < 0) {
+  if (
+    !Number.isSafeInteger(keepStart) ||
+    keepStart < 0 ||
+    !Number.isSafeInteger(keepEnd) ||
+    keepEnd < 0
+  ) {
     throw new Error('保留字符数量须为非负整数');
   }
   const characters = Array.from(input);
   const start = Math.min(keepStart, characters.length);
   const end = Math.min(keepEnd, characters.length - start);
-  return characters.slice(0, start).join('') + '*'.repeat(characters.length - start - end) + characters.slice(characters.length - end).join('');
+  return (
+    characters.slice(0, start).join('') +
+    '*'.repeat(characters.length - start - end) +
+    characters.slice(characters.length - end).join('')
+  );
 }
 
 export function normalizeEmail(input: string): string {
@@ -55,12 +67,17 @@ const regexEntries: RegexCheatsheetEntry[] = [
   { syntax: '(?!...)', name: '负向前瞻', description: '要求后续内容不匹配。' },
   { syntax: '(?<=...)', name: '正向后顾', description: '要求前方内容匹配，但不消耗字符。' },
   { syntax: '\\p{L}', name: 'Unicode 属性', description: 'u 或 v 标志下匹配 Unicode 字母。' },
-  { syntax: '/.../gi', name: '常用标志', description: 'g 全局、i 忽略大小写；其他常见标志有 m、s、u、v、y、d。' },
+  {
+    syntax: '/.../gi',
+    name: '常用标志',
+    description: 'g 全局、i 忽略大小写；其他常见标志有 m、s、u、v、y、d。',
+  },
 ];
 
 export function searchRegexCheatsheet(query: string): RegexCheatsheetEntry[] {
   const needle = query.trim().toLocaleLowerCase();
   if (!needle) return regexEntries;
   return regexEntries.filter(({ syntax, name, description }) =>
-    `${syntax} ${name} ${description}`.toLocaleLowerCase().includes(needle));
+    `${syntax} ${name} ${description}`.toLocaleLowerCase().includes(needle),
+  );
 }

@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +33,28 @@ class HttpProxyControllerTest {
 
     @MockitoBean
     private LimitedHttpClient client;
+
+    @Test
+    void reportsConfiguredProxyStatusWithoutContactingUpstream() throws Exception {
+        mockMvc.perform(get("/api/http/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(true))
+                .andExpect(jsonPath("$.allowedMethods").isArray())
+                .andExpect(jsonPath("$.allowedMethods.length()").value(7))
+                .andExpect(jsonPath("$.allowedMethods[0]").value("GET"))
+                .andExpect(jsonPath("$.allowedMethods[6]").value("OPTIONS"))
+                .andExpect(jsonPath("$.timeoutMs").value(10000))
+                .andExpect(jsonPath("$.maxRequestBytes").value(1048576))
+                .andExpect(jsonPath("$.maxRequestHeaders").value(64))
+                .andExpect(jsonPath("$.maxRequestHeaderBytes").value(16384))
+                .andExpect(jsonPath("$.maxResponseBytes").value(2097152))
+                .andExpect(jsonPath("$.maxResponseHeaders").value(100))
+                .andExpect(jsonPath("$.maxResponseHeaderLineLength").value(8192))
+                .andExpect(jsonPath("$.maxRedirects").value(5))
+                .andExpect(jsonPath("$.maxRequestEnvelopeBytes").value(2097152));
+
+        org.mockito.Mockito.verifyNoInteractions(client);
+    }
 
     @Test
     void returnsStableSuccessContract() throws Exception {

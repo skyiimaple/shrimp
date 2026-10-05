@@ -1,6 +1,7 @@
 package shrimp.proxy.api;
 
 import shrimp.proxy.client.ResponseTooLargeException;
+import shrimp.proxy.client.ResponseHeadersTooLargeException;
 import shrimp.proxy.client.TooManyRedirectsException;
 import shrimp.proxy.client.UpstreamConnectionException;
 import shrimp.proxy.client.UpstreamTimeoutException;
@@ -8,6 +9,7 @@ import shrimp.proxy.security.BlockedTargetException;
 import shrimp.proxy.security.DnsResolutionException;
 import shrimp.proxy.security.InvalidHeaderException;
 import shrimp.proxy.security.InvalidTargetException;
+import shrimp.proxy.security.RequestHeadersTooLargeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -28,6 +30,17 @@ public class ProxyExceptionHandler {
         return error(HttpStatus.FORBIDDEN, "TARGET_BLOCKED", "目标地址不允许访问");
     }
 
+    @ExceptionHandler(RequestHeadersTooLargeException.class)
+    public ResponseEntity<ApiError> requestHeadersTooLarge(RequestHeadersTooLargeException ignored) {
+        return error(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE,
+                "REQUEST_HEADERS_TOO_LARGE", "自定义请求头超过大小限制");
+    }
+
+    @ExceptionHandler(RequestBodyTooLargeException.class)
+    public ResponseEntity<ApiError> requestBodyTooLarge(RequestBodyTooLargeException ignored) {
+        return error(HttpStatus.PAYLOAD_TOO_LARGE, "REQUEST_TOO_LARGE", "请求体超过大小限制");
+    }
+
     @ExceptionHandler(DnsResolutionException.class)
     public ResponseEntity<ApiError> dnsFailure(DnsResolutionException ignored) {
         return error(HttpStatus.BAD_GATEWAY, "DNS_RESOLUTION_FAILED", "目标主机解析失败");
@@ -46,6 +59,11 @@ public class ProxyExceptionHandler {
     @ExceptionHandler(ResponseTooLargeException.class)
     public ResponseEntity<ApiError> tooLarge(ResponseTooLargeException ignored) {
         return error(HttpStatus.BAD_GATEWAY, "RESPONSE_TOO_LARGE", "上游响应体超过大小限制");
+    }
+
+    @ExceptionHandler(ResponseHeadersTooLargeException.class)
+    public ResponseEntity<ApiError> responseHeadersTooLarge(ResponseHeadersTooLargeException ignored) {
+        return error(HttpStatus.BAD_GATEWAY, "UPSTREAM_RESPONSE_HEADERS_TOO_LARGE", "上游响应头超过大小限制");
     }
 
     @ExceptionHandler(TooManyRedirectsException.class)

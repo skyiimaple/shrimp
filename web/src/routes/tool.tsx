@@ -1,5 +1,6 @@
 import { Link, useParams } from '@tanstack/react-router';
 import { ChevronLeft, Heart } from 'lucide-react';
+import { Suspense } from 'react';
 import { Button } from '../components/ui';
 import { useFavorites } from '../features/favorites/favorites-provider';
 import { findTool } from '../tools/registry';
@@ -51,7 +52,9 @@ export function ToolPage() {
           {active ? '已收藏' : '收藏工具'}
         </Button>
       </header>
-      <Component />
+      <Suspense fallback={<div role="status">加载工具中…</div>}>
+        <Component />
+      </Suspense>
     </div>
   );
 }

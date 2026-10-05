@@ -13,9 +13,21 @@ export const COMMON_MIME_TYPES: MimeEntry[] = [
   { mime: 'application/wasm', extensions: ['wasm'], description: 'WebAssembly' },
   { mime: 'application/rtf', extensions: ['rtf'], description: '富文本格式' },
   { mime: 'application/vnd.ms-excel', extensions: ['xls'], description: 'Excel 工作簿' },
-  { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', extensions: ['xlsx'], description: 'Excel 工作簿' },
-  { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', extensions: ['docx'], description: 'Word 文档' },
-  { mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', extensions: ['pptx'], description: 'PowerPoint 演示文稿' },
+  {
+    mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    extensions: ['xlsx'],
+    description: 'Excel 工作簿',
+  },
+  {
+    mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    extensions: ['docx'],
+    description: 'Word 文档',
+  },
+  {
+    mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    extensions: ['pptx'],
+    description: 'PowerPoint 演示文稿',
+  },
   { mime: 'application/x-tar', extensions: ['tar'], description: 'TAR 归档' },
   { mime: 'audio/mpeg', extensions: ['mp3'], description: 'MP3 音频' },
   { mime: 'audio/ogg', extensions: ['ogg', 'oga'], description: 'Ogg 音频' },
@@ -44,10 +56,11 @@ export const COMMON_MIME_TYPES: MimeEntry[] = [
 export function findMimeTypes(query: string): MimeEntry[] {
   const term = query.trim().toLowerCase().replace(/^\./, '');
   if (!term) return COMMON_MIME_TYPES;
-  return COMMON_MIME_TYPES.filter((entry) =>
-    entry.mime.toLowerCase().includes(term) ||
-    entry.extensions.some((extension) => extension.includes(term)) ||
-    entry.description.toLowerCase().includes(term),
+  return COMMON_MIME_TYPES.filter(
+    (entry) =>
+      entry.mime.toLowerCase().includes(term) ||
+      entry.extensions.some((extension) => extension.includes(term)) ||
+      entry.description.toLowerCase().includes(term),
   );
 }
 
@@ -89,7 +102,10 @@ export const COMMON_HTTP_STATUSES: HttpStatusEntry[] = [
 export function findHttpStatuses(query: string): HttpStatusEntry[] {
   const term = query.trim().toLowerCase();
   if (!term) return COMMON_HTTP_STATUSES;
-  return COMMON_HTTP_STATUSES.filter((entry) =>
-    String(entry.code).includes(term) || entry.name.toLowerCase().includes(term) || entry.description.includes(term),
+  return COMMON_HTTP_STATUSES.filter(
+    (entry) =>
+      String(entry.code).includes(term) ||
+      entry.name.toLowerCase().includes(term) ||
+      entry.description.includes(term),
   );
 }

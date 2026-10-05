@@ -3,6 +3,7 @@ package shrimp.proxy.security;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
+import java.net.Inet6Address;
 import java.net.URI;
 import java.util.List;
 
@@ -45,6 +46,8 @@ class TargetValidatorTest {
                     .as(host)
                     .isInstanceOf(BlockedTargetException.class);
         }
+        assertThatThrownBy(() -> validator.validate(URI.create("http://METADATA.GOOGLE.INTERNAL./latest")))
+                .isInstanceOf(BlockedTargetException.class);
     }
 
     @Test
@@ -65,6 +68,46 @@ class TargetValidatorTest {
                 .isInstanceOf(BlockedTargetException.class);
         assertThatThrownBy(() -> aliyun.validate(URI.create("http://example.com")))
                 .isInstanceOf(BlockedTargetException.class);
+    }
+
+    @Test
+    void rejectsIpv4MappedIpv6MetadataAddressReturnedByDns() throws Exception {
+        var mapped = Inet6Address.getByAddress(null, new byte[]{
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) 0xff, (byte) 0xff,
+                (byte) 169, (byte) 254, (byte) 169, (byte) 254
+        }, -1);
+        var validator = new TargetValidator(host -> new InetAddress[]{
+                InetAddress.getByName("93.184.216.34"), mapped
+        });
+
+        assertThatThrownBy(() -> validator.validate(URI.create("http://mixed.example")))
+                .isInstanceOf(BlockedTargetException.class);
+    }
+
+    @Test
+    void allowsIpv4MappedIpv6LoopbackAddressForLocalDebugging() throws Exception {
+        var mappedLoopback = Inet6Address.getByAddress(null, new byte[]{
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) 0xff, (byte) 0xff,
+                127, 0, 0, 1
+        }, -1);
+        var validator = new TargetValidator(host -> new InetAddress[]{mappedLoopback});
+
+        assertThat(validator.validate(URI.create("http://local.example"))).isNotNull();
+    }
+
+    @Test
+    void rejectsMetadataIpv4NumericAliasesOrInvalidForms() {
+        var validator = new TargetValidator(host -> new InetAddress[]{
+                InetAddress.getLoopbackAddress(),
+                InetAddress.getByAddress(new byte[]{(byte) 169, (byte) 254, (byte) 169, (byte) 254})
+        });
+
+        for (String host : List.of("169.254.169.254", "2852039166", "0xa9fea9fe",
+                "0251.0376.0251.0376", "169.254.169.254.")) {
+            assertThatThrownBy(() -> validator.validate(URI.create("http://" + host + "/latest")))
+                    .as(host)
+                    .isInstanceOfAny(BlockedTargetException.class, InvalidTargetException.class);
+        }
     }
 
     @Test

@@ -93,15 +93,12 @@ public class TargetValidator {
     private static boolean isBlockedAddress(InetAddress address) {
         var bytes = address.getAddress();
         if (address instanceof Inet4Address) {
-            var first = Byte.toUnsignedInt(bytes[0]);
-            var second = Byte.toUnsignedInt(bytes[1]);
-            if (first == 169 && second == 254) {
-                return true;
-            }
-            return first == 100 && second == 100
-                    && Byte.toUnsignedInt(bytes[2]) == 100 && Byte.toUnsignedInt(bytes[3]) == 200;
+            return isBlockedIpv4(bytes, 0);
         }
         if (address instanceof Inet6Address) {
+            if (isIpv4Mapped(bytes)) {
+                return isBlockedIpv4(bytes, 12);
+            }
             var first = Byte.toUnsignedInt(bytes[0]);
             var second = Byte.toUnsignedInt(bytes[1]);
             if (first == 0xfe && (second & 0xc0) == 0x80) {
@@ -111,5 +108,25 @@ public class TargetValidator {
             return Arrays.equals(bytes, awsMetadata);
         }
         return false;
+    }
+
+    private static boolean isIpv4Mapped(byte[] bytes) {
+        for (int index = 0; index < 10; index++) {
+            if (bytes[index] != 0) {
+                return false;
+            }
+        }
+        return bytes[10] == (byte) 0xff && bytes[11] == (byte) 0xff;
+    }
+
+    private static boolean isBlockedIpv4(byte[] bytes, int offset) {
+        var first = Byte.toUnsignedInt(bytes[offset]);
+        var second = Byte.toUnsignedInt(bytes[offset + 1]);
+        if (first == 169 && second == 254) {
+            return true;
+        }
+        return first == 100 && second == 100
+                && Byte.toUnsignedInt(bytes[offset + 2]) == 100
+                && Byte.toUnsignedInt(bytes[offset + 3]) == 200;
     }
 }

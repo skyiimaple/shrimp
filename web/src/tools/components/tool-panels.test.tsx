@@ -53,6 +53,13 @@ describe('编码工具界面', () => {
 
 describe('HTTP 工具界面', () => {
   it('把方法、请求头和 Body 交给本地代理客户端', async () => {
+    vi.spyOn(httpClient, 'getHttpProxyStatus').mockResolvedValue({
+      available: true,
+      allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+      timeoutMs: 10000,
+      maxResponseBytes: 2097152,
+      maxRedirects: 5,
+    });
     const send = vi.spyOn(httpClient, 'sendHttpRequest').mockResolvedValue({
       status: 201,
       headers: {},
@@ -67,6 +74,7 @@ describe('HTTP 工具界面', () => {
         <HttpTool />
       </QueryClientProvider>,
     );
+    expect(await screen.findByText(/本地代理已连接/)).toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: '方法' }));
     await user.click(screen.getByRole('option', { name: 'POST' }));
     await user.clear(screen.getByLabelText('请求 URL'));
@@ -84,5 +92,29 @@ describe('HTTP 工具界面', () => {
       headers: { 'Content-Type': 'application/json' },
       body: '{"ok":true}',
     });
+  });
+
+  it('代理离线时提示并允许重新检测', async () => {
+    const status = vi
+      .spyOn(httpClient, 'getHttpProxyStatus')
+      .mockRejectedValueOnce(new Error('无法连接本地代理服务'))
+      .mockResolvedValueOnce({
+        available: true,
+        allowedMethods: ['GET'],
+        timeoutMs: 2500,
+        maxResponseBytes: 4096,
+        maxRedirects: 2,
+      });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={client}>
+        <HttpTool />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(/本地代理未连接/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '重新检测' }));
+    expect(await screen.findByText(/本地代理已连接/)).toBeInTheDocument();
+    expect(status).toHaveBeenCalledTimes(2);
   });
 });

@@ -103,6 +103,208 @@ describe('Agent turn', () => {
     expect(complete).toHaveBeenCalledTimes(2);
   });
 
+  it('executes a newly approved pure text tool and displays its result', async () => {
+    const records: ChatMessage[] = [];
+    let round = 0;
+    const complete = vi.fn(
+      async ({
+        onEvent,
+        messages,
+      }: Parameters<typeof import('./providers').streamCompletion>[0]) => {
+        round++;
+        if (round === 1) {
+          onEvent({
+            type: 'tool_call',
+            id: 'call-url',
+            name: 'url_transform',
+            arguments: '{"mode":"encode","input":"a b"}',
+          });
+        } else {
+          expect(messages.at(-1)).toMatchObject({ role: 'tool', content: 'a%20b' });
+          onEvent({ type: 'text', text: '已编码' });
+        }
+        onEvent({ type: 'done' });
+      },
+    );
+    await runAgentTurn({
+      history: [],
+      userText: '编码 URL',
+      settings,
+      signal: new AbortController().signal,
+      onMessage: (message) => records.push(message),
+      complete,
+    });
+    expect(records.find((message) => message.role === 'tool')).toMatchObject({
+      toolName: 'url_transform',
+      content: 'a%20b',
+    });
+  });
+
+  it('round-trips the second batch of approved tools through the model protocol', async () => {
+    const records: ChatMessage[] = [];
+    let round = 0;
+    const calls = [
+      ['jwt_decode', '{"input":"eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjMifQ.signature"}'],
+      ['color_convert', '{"input":"#ff0000"}'],
+      ['radix_convert', '{"input":"255","from":10,"to":16}'],
+      ['query_transform', '{"mode":"parse","input":"?a=1"}'],
+      ['hash_text', '{"input":"abc","algorithm":"SHA-256"}'],
+    ];
+    const complete = vi.fn(
+      async ({
+        onEvent,
+        messages,
+      }: Parameters<typeof import('./providers').streamCompletion>[0]) => {
+        round++;
+        if (round === 1) {
+          calls.forEach(([name, argumentsValue], index) =>
+            onEvent({ type: 'tool_call', id: `call-${index}`, name, arguments: argumentsValue }),
+          );
+        } else {
+          expect(messages.filter((message) => message.role === 'tool')).toHaveLength(5);
+          onEvent({ type: 'text', text: '已完成第二批工具调用' });
+        }
+        onEvent({ type: 'done' });
+      },
+    );
+    await runAgentTurn({
+      history: [],
+      userText: '依次处理这些本地数据',
+      settings,
+      signal: new AbortController().signal,
+      onMessage: (message) => records.push(message),
+      complete,
+    });
+    expect(records.filter((message) => message.role === 'tool')).toHaveLength(5);
+    expect(records.at(-1)).toMatchObject({ content: '已完成第二批工具调用', status: 'complete' });
+  });
+
+  it('round-trips structured data tools and returns their local results', async () => {
+    const records: ChatMessage[] = [];
+    let round = 0;
+    const calls = [
+      ['json_diff', '{"left":"{\\"a\\":1}","right":"{\\"a\\":2}"}'],
+      ['csv_json_transform', '{"mode":"to_json","format":"csv","input":"a\\n1"}'],
+      ['structured_data_transform', '{"mode":"yaml_to_json","input":"name: shrimp"}'],
+      ['yaml_format', '{"input":"name: shrimp"}'],
+    ];
+    const complete = vi.fn(
+      async ({
+        onEvent,
+        messages,
+      }: Parameters<typeof import('./providers').streamCompletion>[0]) => {
+        round++;
+        if (round === 1) {
+          calls.forEach(([name, argumentsValue], index) =>
+            onEvent({
+              type: 'tool_call',
+              id: `structured-${index}`,
+              name,
+              arguments: argumentsValue,
+            }),
+          );
+        } else {
+          expect(messages.filter((message) => message.role === 'tool')).toHaveLength(4);
+          onEvent({ type: 'text', text: '结构化数据处理完成' });
+        }
+        onEvent({ type: 'done' });
+      },
+    );
+    await runAgentTurn({
+      history: [],
+      userText: '处理结构化数据',
+      settings,
+      signal: new AbortController().signal,
+      onMessage: (message) => records.push(message),
+      complete,
+    });
+    expect(records.filter((message) => message.role === 'tool')).toHaveLength(4);
+    expect(records.at(-1)).toMatchObject({ content: '结构化数据处理完成', status: 'complete' });
+  });
+
+  it('round-trips the fourth batch of conversion tools', async () => {
+    const records: ChatMessage[] = [];
+    let round = 0;
+    const calls = [
+      ['roman_numeral', '{"mode":"to_roman","input":"42"}'],
+      ['numeronym', '{"input":"internationalization"}'],
+      ['binary_text_transform', '{"mode":"to_binary","input":"A"}'],
+      ['unicode_text_transform', '{"mode":"to_unicode","input":"虾"}'],
+      ['temperature_convert', '{"value":0,"from":"C","to":"F"}'],
+    ];
+    const complete = vi.fn(
+      async ({
+        onEvent,
+        messages,
+      }: Parameters<typeof import('./providers').streamCompletion>[0]) => {
+        round++;
+        if (round === 1) {
+          calls.forEach(([name, argumentsValue], index) =>
+            onEvent({
+              type: 'tool_call',
+              id: `conversion-${index}`,
+              name,
+              arguments: argumentsValue,
+            }),
+          );
+        } else {
+          expect(messages.filter((message) => message.role === 'tool')).toHaveLength(5);
+          onEvent({ type: 'text', text: '转换完成' });
+        }
+        onEvent({ type: 'done' });
+      },
+    );
+    await runAgentTurn({
+      history: [],
+      userText: '做几项本地转换',
+      settings,
+      signal: new AbortController().signal,
+      onMessage: (message) => records.push(message),
+      complete,
+    });
+    expect(records.filter((message) => message.role === 'tool')).toHaveLength(5);
+    expect(records.at(-1)).toMatchObject({ content: '转换完成', status: 'complete' });
+  });
+
+  it('round-trips local network and reference tools', async () => {
+    const records: ChatMessage[] = [];
+    let round = 0;
+    const calls = [
+      ['ipv4_subnet', '{"input":"192.168.1.10/24"}'],
+      ['ipv4_address', '{"input":"0xC0A80101"}'],
+      ['mac_address_generate', '{}'],
+      ['mime_lookup', '{"query":"json"}'],
+      ['http_status_lookup', '{"query":"404"}'],
+    ];
+    const complete = vi.fn(
+      async ({
+        onEvent,
+        messages,
+      }: Parameters<typeof import('./providers').streamCompletion>[0]) => {
+        round++;
+        if (round === 1) {
+          calls.forEach(([name, argumentsValue], index) =>
+            onEvent({ type: 'tool_call', id: `network-${index}`, name, arguments: argumentsValue }),
+          );
+        } else {
+          expect(messages.filter((message) => message.role === 'tool')).toHaveLength(5);
+          onEvent({ type: 'text', text: '本地查询完成' });
+        }
+        onEvent({ type: 'done' });
+      },
+    );
+    await runAgentTurn({
+      history: [],
+      userText: '查询这些本地信息',
+      settings,
+      signal: new AbortController().signal,
+      onMessage: (message) => records.push(message),
+      complete,
+    });
+    expect(records.filter((message) => message.role === 'tool')).toHaveLength(5);
+    expect(records.at(-1)).toMatchObject({ content: '本地查询完成', status: 'complete' });
+  });
+
   it('marks partial reply interrupted when stopped', async () => {
     const controller = new AbortController();
     const records = new Map<string, ChatMessage>();

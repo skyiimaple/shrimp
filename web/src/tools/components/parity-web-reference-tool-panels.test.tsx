@@ -12,7 +12,9 @@ describe('Web reference panels', () => {
     render(<MimeTypeTool />);
     fireEvent.change(screen.getByLabelText('扩展名或 MIME 类型'), { target: { value: '.png' } });
     expect(screen.getByText('image/png')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('扩展名或 MIME 类型'), { target: { value: 'application/json' } });
+    fireEvent.change(screen.getByLabelText('扩展名或 MIME 类型'), {
+      target: { value: 'application/json' },
+    });
     expect(screen.getByText('.json')).toBeInTheDocument();
     expect(screen.getByText(/仅收录常见类型/)).toBeInTheDocument();
   });

@@ -42,12 +42,18 @@ export function Ipv4SubnetTool() {
     <div className="tool-grid">
       <Card className="grid gap-4">
         <Field label="IPv4 CIDR" hint="例如 192.168.1.130/26；/31 按点对点网络计算">
-          <Input aria-label="IPv4 CIDR" value={state.input} onChange={(event) => state.change(event.target.value)} />
+          <Input
+            aria-label="IPv4 CIDR"
+            value={state.input}
+            onChange={(event) => state.change(event.target.value)}
+          />
         </Field>
         <Button onClick={state.run}>计算子网</Button>
         {state.error && <ErrorBox>{state.error}</ErrorBox>}
       </Card>
-      <Card><ToolResult value={state.output} label="子网计算结果" /></Card>
+      <Card>
+        <ToolResult value={state.output} label="子网计算结果" />
+      </Card>
     </div>
   );
 }
@@ -66,12 +72,18 @@ export function Ipv4AddressTool() {
     <div className="tool-grid">
       <Card className="grid gap-4">
         <Field label="IPv4 地址或整数" hint="支持点分十进制、无符号十进制、0x 十六进制和 0b 二进制">
-          <Input aria-label="IPv4 地址或整数" value={state.input} onChange={(event) => state.change(event.target.value)} />
+          <Input
+            aria-label="IPv4 地址或整数"
+            value={state.input}
+            onChange={(event) => state.change(event.target.value)}
+          />
         </Field>
         <Button onClick={state.run}>转换地址</Button>
         {state.error && <ErrorBox>{state.error}</ErrorBox>}
       </Card>
-      <Card><ToolResult value={state.output} label="地址转换结果" /></Card>
+      <Card>
+        <ToolResult value={state.output} label="地址转换结果" />
+      </Card>
     </div>
   );
 }
@@ -81,10 +93,14 @@ export function MacAddressTool() {
   return (
     <div className="tool-grid">
       <Card className="grid content-start gap-4">
-        <p className="text-sm text-muted-foreground">使用浏览器安全随机数生成本地管理的单播 MAC 地址。</p>
+        <p className="text-muted-foreground text-sm">
+          使用浏览器安全随机数生成本地管理的单播 MAC 地址。
+        </p>
         <Button onClick={() => setOutput(generateMacAddress())}>生成 MAC 地址</Button>
       </Card>
-      <Card><ToolResult value={output} label="MAC 地址" /></Card>
+      <Card>
+        <ToolResult value={output} label="MAC 地址" />
+      </Card>
     </div>
   );
 }
