@@ -41,34 +41,70 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Component
 public class PinnedHttpTransport {
+    private static final int MAX_CONCURRENT_UPSTREAM_REQUESTS = 128;
     private final TlsSocketStrategy tlsStrategy;
+    private final Semaphore upstreamSlots;
     private final ResponseBodyReader bodyReader = new ResponseBodyReader();
 
     public PinnedHttpTransport() {
         this(ClientTlsStrategyBuilder.create()
                 .setHostVerificationPolicy(HostnameVerificationPolicy.BOTH)
-                .buildClassic());
+                .buildClassic(), new Semaphore(MAX_CONCURRENT_UPSTREAM_REQUESTS));
     }
 
     PinnedHttpTransport(SSLContext context) {
         this(ClientTlsStrategyBuilder.create()
                 .setSslContext(context)
                 .setHostVerificationPolicy(HostnameVerificationPolicy.BOTH)
-                .buildClassic());
+                .buildClassic(), new Semaphore(MAX_CONCURRENT_UPSTREAM_REQUESTS));
     }
 
-    private PinnedHttpTransport(TlsSocketStrategy tlsStrategy) {
+    PinnedHttpTransport(SSLContext context, Semaphore upstreamSlots) {
+        this(ClientTlsStrategyBuilder.create()
+                .setSslContext(context)
+                .setHostVerificationPolicy(HostnameVerificationPolicy.BOTH)
+                .buildClassic(), upstreamSlots);
+    }
+
+    PinnedHttpTransport(Semaphore upstreamSlots) {
+        this(ClientTlsStrategyBuilder.create()
+                .setHostVerificationPolicy(HostnameVerificationPolicy.BOTH)
+                .buildClassic(), upstreamSlots);
+    }
+
+    private PinnedHttpTransport(TlsSocketStrategy tlsStrategy, Semaphore upstreamSlots) {
         this.tlsStrategy = tlsStrategy;
+        this.upstreamSlots = upstreamSlots;
     }
 
     public HopResponse send(ValidatedTarget target, String method, HttpHeaders headers,
                             byte[] body, Duration remaining, long maxResponseBytes,
                             int maxResponseHeaders, int maxResponseHeaderLineLength) {
+        try {
+            if (!upstreamSlots.tryAcquire(remaining.toNanos(), TimeUnit.NANOSECONDS)) {
+                throw new UpstreamTimeoutException();
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new UpstreamTimeoutException(exception);
+        }
+        try {
+            return sendWithSlot(target, method, headers, body, remaining, maxResponseBytes,
+                    maxResponseHeaders, maxResponseHeaderLineLength);
+        } finally {
+            upstreamSlots.release();
+        }
+    }
+
+    private HopResponse sendWithSlot(ValidatedTarget target, String method, HttpHeaders headers,
+                                     byte[] body, Duration remaining, long maxResponseBytes,
+                                     int maxResponseHeaders, int maxResponseHeaderLineLength) {
         var timeout = Timeout.ofMilliseconds(Math.max(1, remaining.toMillis()));
         // HttpCore rejects at the configured count and includes CR before LF in its raw line-length check.
         var http1Config = Http1Config.custom()

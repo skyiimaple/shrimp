@@ -5,17 +5,29 @@ import shrimp.proxy.api.HttpSendResponse;
 import shrimp.proxy.config.ProxyProperties;
 import shrimp.proxy.security.HeaderSanitizer;
 import shrimp.proxy.security.TargetValidator;
+import shrimp.proxy.security.ValidatedTarget;
 import shrimp.proxy.api.RequestBodyTooLargeException;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class LimitedHttpClient {
+    private static final int MAX_CONCURRENT_DNS_VALIDATIONS = 16;
     private static final Set<String> CROSS_ORIGIN_CREDENTIAL_HEADERS = Set.of(
             "authorization", "cookie", "cookie2", "x-api-key", "x-auth-token",
             "x-access-token", "x-authorization");
@@ -23,6 +35,8 @@ public class LimitedHttpClient {
     private final TargetValidator targetValidator;
     private final HeaderSanitizer headerSanitizer;
     private final PinnedHttpTransport transport;
+    private final ExecutorService dnsExecutor;
+    private final Semaphore dnsSlots = new Semaphore(MAX_CONCURRENT_DNS_VALIDATIONS);
 
     public LimitedHttpClient(
             ProxyProperties properties,
@@ -33,6 +47,8 @@ public class LimitedHttpClient {
         this.targetValidator = targetValidator;
         this.headerSanitizer = headerSanitizer;
         this.transport = transport;
+        this.dnsExecutor = Executors.newFixedThreadPool(
+                MAX_CONCURRENT_DNS_VALIDATIONS, daemonThreadFactory());
     }
 
     public HttpSendResponse send(HttpSendRequest input) {
@@ -49,7 +65,7 @@ public class LimitedHttpClient {
         URI previousHop = null;
 
         while (true) {
-            var target = targetValidator.validate(uri);
+            var target = validate(uri, deadline);
             if (previousHop != null && !sameOrigin(previousHop, target.uri())) {
                 headers.keySet().removeIf(name -> CROSS_ORIGIN_CREDENTIAL_HEADERS.contains(
                         name.toLowerCase(Locale.ROOT)));
@@ -74,6 +90,64 @@ public class LimitedHttpClient {
             return new HttpSendResponse(response.status(), response.headers(),
                     response.body().body(), response.body().encoding(), elapsedMs);
         }
+    }
+
+    private ValidatedTarget validate(URI uri, long deadline) {
+        boolean acquired;
+        try {
+            acquired = dnsSlots.tryAcquire(remaining(deadline).toNanos(), TimeUnit.NANOSECONDS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new UpstreamTimeoutException(exception);
+        }
+        if (!acquired) {
+            throw new UpstreamTimeoutException();
+        }
+
+        Future<ValidatedTarget> future;
+        try {
+            future = dnsExecutor.submit(() -> {
+                try {
+                    return targetValidator.validate(uri);
+                } finally {
+                    dnsSlots.release();
+                }
+            });
+        } catch (RejectedExecutionException exception) {
+            dnsSlots.release();
+            throw new UpstreamTimeoutException(exception);
+        }
+
+        try {
+            return future.get(remaining(deadline).toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException exception) {
+            future.cancel(true);
+            throw new UpstreamTimeoutException(exception);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            future.cancel(true);
+            throw new UpstreamTimeoutException(exception);
+        } catch (ExecutionException exception) {
+            var cause = exception.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new UpstreamConnectionException(cause);
+        }
+    }
+
+    @PreDestroy
+    void shutdownDnsExecutor() {
+        dnsExecutor.shutdownNow();
+    }
+
+    private static ThreadFactory daemonThreadFactory() {
+        var sequence = new AtomicInteger();
+        return runnable -> {
+            var thread = new Thread(runnable, "shrimp-dns-" + sequence.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
     }
 
     private boolean sameOrigin(URI left, URI right) {

@@ -28,7 +28,9 @@ pnpm dev
 
 导入仓库时，将项目的 **Root Directory** 设为 `web`。本目录的 `vercel.json` 指定 Vite 构建、`dist` 输出和单页应用路由；`api/jev/evaluate.ts` 会作为 Vercel Function 提供同源的 Jev 接口。前端调用地址与本地开发一致，不需要 Java 服务或 API Key 环境变量；用户在浏览器输入自己的 Key。
 
-`HTTP 请求` 工具仍依赖单独的 Java 后端，当前 Vercel 配置只承接 Jev。若将 `dist/` 放到 Vercel 以外的纯静态服务器，仍需由该部署环境提供 `/api/jev/evaluate` 同源接口。
+  `HTTP 请求` 工具仍依赖单独的 Java 后端，当前 Vercel 配置只承接 Jev。若将 `dist/` 放到 Vercel 以外的纯静态服务器，仍需由该部署环境提供 `/api/jev/evaluate` 同源接口。
+
+运行环境试炼场使用锁定版本 `pyodide@0.29.0`。构建时会把 Pyodide 的 wasm、标准库和锁文件复制到本站 `/pyodide/` 静态路径；Python 运行时只在第一次运行 Python 代码时由 dedicated Worker 懒加载，JavaScript 也始终在独立 Worker 中执行。JavaScript Worker 的静态资源带 `connect-src 'none'` CSP；Python 只允许初始化阶段从本站加载 Pyodide 资源，初始化后锁定网络原语，并用受限导入器执行用户代码。代码不会访问 DOM、localStorage、网络、本地文件、外部模块或自动安装包；单次运行最多 3 秒，代码最多 50,000 字符，输出最多 20,000 字符。停止或超时会终止 Worker，下一次运行会重新创建。Python 首次启动需要加载约 12 MB 本地资源，之后同一页面会复用已经初始化的 Worker。
 
 ## 常用命令
 

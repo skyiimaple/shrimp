@@ -3,8 +3,8 @@ import { groupToolsByCategory, searchTools, tools } from './registry';
 
 describe('工具注册表', () => {
   it('slug 与路径唯一并保持对应', () => {
-    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(91);
-    expect(new Set(tools.map((tool) => tool.path)).size).toBe(91);
+    expect(new Set(tools.map((tool) => tool.slug)).size).toBe(92);
+    expect(new Set(tools.map((tool) => tool.path)).size).toBe(92);
     expect(tools.every((tool) => tool.path === `/tools/${tool.slug}`)).toBe(true);
   });
   it('按名称、关键词、分类和简介检索', () => {
@@ -90,6 +90,7 @@ describe('工具注册表', () => {
     expect(searchTools('PDF 签名').map((tool) => tool.slug)).toContain('pdf-signature');
     expect(searchTools('IP 查询').map((tool) => tool.slug)).toContain('ip-lookup');
     expect(searchTools('DNS 查询').map((tool) => tool.slug)).toContain('dns-lookup');
+    expect(searchTools('Python').map((tool) => tool.slug)).toContain('runtime-playground');
   });
   it('按注册顺序分组', () => {
     expect(groupToolsByCategory(tools).get('网络工具')?.[0].slug).toBe('http');

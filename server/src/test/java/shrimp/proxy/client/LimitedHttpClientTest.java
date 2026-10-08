@@ -23,6 +23,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.ExtendedSSLSession;
@@ -141,6 +144,79 @@ class LimitedHttpClientTest {
 
         assertThat(response.body()).isEqualTo("ok");
         assertThat(validator.calls()).isEqualTo(2);
+    }
+
+    @Test
+    void enforcesTotalTimeoutWhileDnsResolutionIsBlocked() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var validator = new TargetValidator(host -> {
+            entered.countDown();
+            try {
+                release.await(500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
+            return new InetAddress[]{InetAddress.getLoopbackAddress()};
+        });
+        var client = client(Duration.ofMillis(100), 1024, 5, validator);
+        var started = System.nanoTime();
+
+        assertThatThrownBy(() -> client.send(new HttpSendRequest(
+                "http://blocked-dns.invalid/slow", "GET", Map.of(), null)))
+                .isInstanceOf(UpstreamTimeoutException.class);
+
+        assertThat(entered.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(Duration.ofNanos(System.nanoTime() - started).toMillis()).isLessThan(400);
+        release.countDown();
+    }
+
+    @Test
+    void appliesTotalTimeoutToDnsResolutionOnRedirect() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(302)
+                .addHeader("Location", "http://blocked-dns.invalid:" + server.getPort() + "/next"));
+        var calls = new AtomicInteger();
+        var release = new CountDownLatch(1);
+        var validator = new TargetValidator(host -> {
+            if (calls.incrementAndGet() > 1) {
+                try {
+                    release.await(500, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            return new InetAddress[]{InetAddress.getLoopbackAddress()};
+        });
+        var client = client(Duration.ofMillis(150), 1024, 1, validator);
+
+        assertThatThrownBy(() -> client.send(new HttpSendRequest(
+                server.url("/start").toString(), "GET", Map.of(), null)))
+                .isInstanceOf(UpstreamTimeoutException.class);
+
+        assertThat(server.getRequestCount()).isEqualTo(1);
+        assertThat(calls.get()).isEqualTo(2);
+        release.countDown();
+    }
+
+    @Test
+    void boundsConcurrentUpstreamRequestsBeforeAllocatingPerRequestResources() throws Exception {
+        server.enqueue(new MockResponse().setBody("slow")
+                .setBodyDelay(500, TimeUnit.MILLISECONDS));
+        var transport = new PinnedHttpTransport(new Semaphore(1));
+        var first = client(Duration.ofSeconds(2), 1024, 5, validator(), transport);
+        var second = client(Duration.ofMillis(100), 1024, 5, validator(), transport);
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var firstRequest = executor.submit(() -> first.send(new HttpSendRequest(
+                    server.url("/first").toString(), "GET", Map.of(), null)));
+            assertThat(server.takeRequest(1, TimeUnit.SECONDS)).isNotNull();
+
+            assertThatThrownBy(() -> second.send(new HttpSendRequest(
+                    server.url("/second").toString(), "GET", Map.of(), null)))
+                    .isInstanceOf(UpstreamTimeoutException.class);
+            assertThat(firstRequest.get(2, TimeUnit.SECONDS).body()).isEqualTo("slow");
+            assertThat(server.getRequestCount()).isEqualTo(1);
+        }
     }
 
     @Test
@@ -418,9 +494,14 @@ class LimitedHttpClientTest {
     }
 
     private LimitedHttpClient client(Duration timeout, long maxBytes, int redirects, TargetValidator validator) {
+        return client(timeout, maxBytes, redirects, validator, new PinnedHttpTransport());
+    }
+
+    private LimitedHttpClient client(Duration timeout, long maxBytes, int redirects,
+                                     TargetValidator validator, PinnedHttpTransport transport) {
         var properties = new ProxyProperties(timeout, 1048576, maxBytes, redirects, 64, 16384, 100, 8192);
         return new LimitedHttpClient(properties, validator, new HeaderSanitizer(properties),
-                new PinnedHttpTransport());
+                transport);
     }
 
     private LimitedHttpClient tlsClient(TargetValidator validator, SSLContext context) {

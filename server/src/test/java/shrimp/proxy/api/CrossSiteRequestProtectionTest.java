@@ -10,6 +10,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -148,6 +149,28 @@ class CrossSiteRequestProtectionTest {
                             .content("{\"url\":\"http://127.0.0.1:8080\",\"method\":\"GET\"}"))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("CROSS_SITE_REQUEST_BLOCKED"));
+        }
+
+        verifyNoInteractions(client);
+    }
+
+    @Test
+    void doesNotLetEncodedOrNormalizedPathVariantsBypassCrossSiteFilter() throws Exception {
+        for (String path : new String[]{
+                "/api/http/%73end",
+                "/api/http/send/",
+                "/api//http//send",
+                "/api/http/SEND",
+                "/api/http/send;v=1",
+                "/api/http/./send",
+                "/api/http/x/../send",
+                "/api/http/send?next=1"}) {
+            var result = mockMvc.perform(post(path)
+                            .header("Origin", "https://evil.example")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"url\":\"http://127.0.0.1:8080\",\"method\":\"GET\"}"))
+                    .andReturn();
+            assertThat(result.getResponse().getStatus()).as(path).isNotEqualTo(200);
         }
 
         verifyNoInteractions(client);

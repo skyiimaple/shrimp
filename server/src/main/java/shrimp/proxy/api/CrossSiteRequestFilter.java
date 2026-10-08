@@ -25,8 +25,18 @@ public class CrossSiteRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !((request.getContextPath() + "/api/http/send").equals(request.getRequestURI())
+        return !(isSendPath(request)
                 && ("POST".equals(request.getMethod()) || "OPTIONS".equals(request.getMethod())));
+    }
+
+    private boolean isSendPath(HttpServletRequest request) {
+        var contextPath = request.getContextPath();
+        var path = request.getRequestURI();
+        if (!path.startsWith(contextPath)) {
+            return false;
+        }
+        path = path.substring(contextPath.length()).replaceAll(";[^/]*", "");
+        return "/api/http/send".equals(path);
     }
 
     @Override

@@ -16,3 +16,6 @@ target/
 
 .cursor/
 .vscode/
+
+# Local TypeScript tests
+*.test.ts

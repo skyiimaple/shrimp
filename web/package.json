@@ -35,6 +35,7 @@
     "marked": "^18.0.14",
     "oui-data": "2.1.33",
     "pdf-signature-reader": "1.4.3",
+    "pyodide": "0.29.0",
     "qrcode-generator": "^2.0.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

@@ -78,7 +78,7 @@ Shrimp 工具箱的本机 HTTP 代理。前端的 HTTP 请求工具把请求发�
 
 `application.yml` 中的 `shrimp.proxy`：
 
-- `timeout`：整次请求超时，默认 `10s`。
+- `timeout`：整次请求超时，默认 `10s`。预算覆盖每一跳的 DNS 校验、连接、TLS、读取和重定向；DNS 校验使用固定 16 个并发槽位，超时返回 `UPSTREAM_TIMEOUT`。底层解析若忽略中断，已提交的任务会继续占用槽位直到解析结束，但不会无限创建任务。
 - `max-request-bytes`：发送接口解码后请求体上限，默认 `1048576`（1 MiB）；必须大于 0 且小于 2 GiB。入站 JSON 外层仍有读取保护，Base64 字符串长度不作为上游请求体长度发送。
 - `max-request-envelope-bytes`：入站 `/api/http/send` JSON 外层的读取上限，默认 `2097152`（2 MiB），必须大于 0 且小于 2 GiB。该上限覆盖 Base64 膨胀和 JSON 开销；解码后的实际请求体仍严格受 `max-request-bytes` 限制。
 - `max-request-headers`：自定义请求头条目数上限，默认 `64`，必须大于 0。
@@ -87,6 +87,7 @@ Shrimp 工具箱的本机 HTTP 代理。前端的 HTTP 请求工具把请求发�
 - `max-response-headers`：每一跳上游响应头数量上限，默认 `100`，必须大于 0。
 - `max-response-header-line-length`：每一跳上游响应头单行长度上限，默认 `8192`，必须大于 0；HTTP/1 解析器也用它限制响应状态行。超过任一响应头限制时返回 HTTP 502 `UPSTREAM_RESPONSE_HEADERS_TOO_LARGE`，不返回部分上游响应。
 - `max-redirects`：重定向上限，默认 `5`。每一跳都会重新解析并校验。
+- 上游并发：代理固定最多同时执行 `128` 个上游请求；达到上限时请求会在自身 `timeout` 预算内等待，无法取得槽位则返回 `UPSTREAM_TIMEOUT`。该限制用于防止高并发请求同时创建连接、响应读取和临时传输资源。
 
 ## 安全边界
 
@@ -94,6 +95,7 @@ Shrimp 工具箱的本机 HTTP 代理。前端的 HTTP 请求工具把请求发�
 - 允许本机、常见局域网和公网目标。拒绝链路本地地址，以及常见云厂商元数据主机名（AWS、GCP、Azure、阿里云、腾讯云）。解析到的任一地址命中即拒绝；IPv4-mapped IPv6 地址也按其内嵌 IPv4 地址校验。
 - 调用方不能覆盖 `Host`、`Content-Length` 等逐跳或敏感传输头。
 - `/api/http/send` 只接受无 `Origin` 的 CLI 调用、明确的本机来源（`localhost`、`127.0.0.1`、`::1`，任意开发端口）或非跨站的浏览器请求；Origin 必须是单个、无 userinfo/路径/查询的标准 HTTP(S) origin。重复 Origin、逗号拼接值、非本机 Origin、`Origin: null`、无效 Origin，或 `Sec-Fetch-Site: cross-site` 的 POST/OPTIONS 会返回 403 `CROSS_SITE_REQUEST_BLOCKED`。这会阻断 JSON、简单表单和预检触达代理，保留本机 Vite 开发代理与 curl/CLI 使用；不改变代理访问 localhost/私网目标的能力。
+- 跨站过滤会按 Spring MVC 的路径参数规范化识别 `/api/http/send`，包括矩阵参数变体；其他未映射路径仍由 MVC 正常处理。
 - 每一跳先校验 DNS 解析出的全部地址，再把该跳连接限定到已校验的地址；连接阶段不会对原主机名再次做系统 DNS 查询。重定向到新主机时重复此流程，防止解析结果在校验与连接之间变化。
 - 自动跟随重定向时，按协议、主机名和有效端口比较每一跳的 origin（默认 HTTP 80、HTTPS 443）。跨 origin 后移除 `Authorization`、`Cookie`、`Cookie2`、`X-Api-Key`、`X-Auth-Token`、`X-Access-Token`、`X-Authorization`，后续即使跳回原 origin 也不恢复；同 origin 保留这些头。HTTPS→HTTP 降级也属于跨 origin，但重定向本身仍允许。其他自定义头及按现有重定向语义保留的请求体可能包含敏感数据，调用方不应把机密放入不受保护的字段。
 - HTTPS 仍使用 URL 的原主机名发送 SNI、设置 `Host` 并验证服务器证书，不用固定的 IP 地址代替主机名做证书校验。传输层使用 Apache HttpClient 5 的自定义 DNS 解析器；目前按 HTTP/1.1、每跳独立连接处理，以换取明确的地址绑定和隔离，连接复用效率可能低于共享客户端。

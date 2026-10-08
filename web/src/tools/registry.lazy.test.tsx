@@ -5,7 +5,7 @@ import { searchTools, tools } from './registry';
 
 describe('lazy tool panels', () => {
   it('keeps searchable metadata available and renders the selected panel', async () => {
-    expect(tools).toHaveLength(91);
+    expect(tools).toHaveLength(92);
     expect(
       tools.every(
         (tool) =>

@@ -4,6 +4,7 @@ import {
   CaseSensitive,
   CalendarClock,
   Clock3,
+  Code2,
   Database,
   FileCode2,
   FileJson,
@@ -438,6 +439,11 @@ const DnsLookupTool = lazy(() =>
     default: module.DnsLookupTool,
   })),
 );
+const RuntimePlaygroundTool = lazy(() =>
+  import('./components/runtime-playground-tool').then((module) => ({
+    default: module.RuntimePlaygroundTool,
+  })),
+);
 export const tools: ToolDefinition[] = [
   {
     name: 'JSON',
@@ -638,6 +644,16 @@ export const tools: ToolDefinition[] = [
     description: '使用安全随机源生成密码并分析强度。',
     icon: LockKeyhole,
     component: PasswordTool,
+  },
+  {
+    name: '运行环境试炼场',
+    slug: 'runtime-playground',
+    path: '/tools/runtime-playground',
+    category: '开发辅助',
+    keywords: ['JavaScript', 'Python', '代码运行', 'Worker', '试炼场'],
+    description: '在隔离 Worker 中运行短小的 JavaScript 或 Python 代码。',
+    icon: Code2,
+    component: RuntimePlaygroundTool,
   },
   {
     name: 'Jev 调用试炼场',

@@ -6,6 +6,7 @@ import { createJevProxyHandler } from './local-proxy';
 import networkLookupHandler from './api/network/lookup';
 import publicToolsHandler from './api/network/public-tools';
 import { macVendorAssetsPlugin } from './build/mac-vendor-assets';
+import { pyodideAssetsPlugin } from './build/pyodide-assets';
 
 export default defineConfig({
   resolve: {
@@ -15,6 +16,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     macVendorAssetsPlugin(),
+    pyodideAssetsPlugin(),
     {
       name: 'jev-local-proxy',
       configureServer(server) {
@@ -52,6 +54,7 @@ export default defineConfig({
       },
     },
   },
+  worker: { format: 'es' },
   server: { proxy: { '/api': 'http://127.0.0.1:8080' } },
   test: {
     environment: 'jsdom',
