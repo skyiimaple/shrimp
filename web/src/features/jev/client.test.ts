@@ -27,6 +27,7 @@ describe('Jev 本地客户端', () => {
     const init = fetcher.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(init.body));
     expect(init.headers).toMatchObject({ Authorization: 'Bearer secret-key' });
+    expect(init.headers).not.toHaveProperty('TypeSafe-Danger-Zone-Images');
     expect(body).toMatchObject({ state: 'ticket', model: 'jev-latest' });
     expect(JSON.stringify(body)).not.toContain('secret-key');
     expect(result.answers.urgent).toMatchObject({ type: 'noul', noul: 0.95 });

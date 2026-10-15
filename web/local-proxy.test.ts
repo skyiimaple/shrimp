@@ -72,3 +72,30 @@ describe('Jev 本地转发', () => {
     expect(redirect.headers.get('Location')).toBeNull();
   });
 });
+
+it('本地 HTTP 路径保留图片 assets 并启用实验头', async () => {
+  const upstream = vi.fn().mockResolvedValue(new Response('{"answers":{},"model":"jev-1.13.0"}'));
+  const url = await localUrl(createJevProxyHandler(upstream));
+  const payload = {
+    state: { image: 'photo-uuid' },
+    questions: { a: { type: 'noul', instructions: 'look' } },
+    assets: { 'photo-uuid': { type: 'image', format: 'png', data_base64: 'iVBORw0KGgo=' } },
+  };
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer secret-key', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  expect(response.status).toBe(200);
+  expect(upstream.mock.calls[0][1].headers).toMatchObject({
+    'TypeSafe-Danger-Zone-Images': 'true',
+  });
+  expect(JSON.parse(upstream.mock.calls[0][1].body).assets).toEqual(payload.assets);
+  const invalid = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer secret-key', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, state: 'unreferenced' }),
+  });
+  expect(invalid.status).toBe(400);
+  expect(upstream).toHaveBeenCalledTimes(1);
+});

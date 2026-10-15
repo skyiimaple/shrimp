@@ -134,3 +134,23 @@ describe('Jev 调用试炼场', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
+
+it('可添加多张图片、预览引用并移除，图片不持久保存', async () => {
+  localStorage.setItem('shrimp:jev-api-key', 'secret-key');
+  const user = userEvent.setup();
+  render(<JevTool />);
+  await user.upload(screen.getByLabelText('添加图片'), [
+    new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], 'cat.png', { type: 'image/png' }),
+    new File([new Uint8Array([255, 216, 255, 224])], 'dog.jpg', { type: 'image/jpeg' }),
+  ]);
+  expect(await screen.findByAltText('cat.png')).toBeInTheDocument();
+  expect(screen.getByAltText('dog.jpg')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: '展开请求 JSON 预览' }));
+  let preview = JSON.parse((screen.getByLabelText('请求 JSON 预览') as HTMLTextAreaElement).value);
+  expect(Object.keys(preview.assets)).toHaveLength(2);
+  expect(preview.state.images).toHaveLength(2);
+  await user.click(screen.getByRole('button', { name: '移除 cat.png' }));
+  preview = JSON.parse((screen.getByLabelText('请求 JSON 预览') as HTMLTextAreaElement).value);
+  expect(Object.keys(preview.assets)).toHaveLength(1);
+  expect(localStorage.length).toBe(1);
+});

@@ -1,9 +1,11 @@
+import type { JevImage } from './images';
 import { failure, type Result } from '../../tools/lib/result';
 
 export type StateMode = '文本' | 'JSON';
 
 export interface JevRequest {
   model: 'jev-latest';
+  assets?: Record<string, JevImage['asset']>;
   state: string | Record<string, unknown> | unknown[];
   questions: Record<string, Record<string, unknown>>;
 }
@@ -16,6 +18,7 @@ export function buildJevRequest(
   stateInput: string,
   stateMode: StateMode,
   questionsInput: string,
+  images: JevImage[] = [],
 ): Result<JevRequest> {
   let state: JevRequest['state'] = stateInput;
   if (stateMode === 'JSON') {
@@ -29,7 +32,8 @@ export function buildJevRequest(
       return failure('state JSON 格式无效');
     }
   }
-  if (typeof state === 'string' && !state.trim()) return failure('请输入 state 内容');
+  if (!images.length && typeof state === 'string' && !state.trim())
+    return failure('请输入 state 内容');
   let questions: unknown;
   try {
     questions = JSON.parse(questionsInput);
@@ -59,8 +63,17 @@ export function buildJevRequest(
     )
       return failure(`问题 ${id} 的 score 需要 2 到 10 个等级`);
   }
-  return {
-    ok: true,
-    value: { model: 'jev-latest', state, questions: questions as JevRequest['questions'] },
+  const value: JevRequest = {
+    model: 'jev-latest',
+    state: images.length
+      ? { content: state, images: images.map(({ id, name }) => ({ name, image: id })) }
+      : state,
+    questions: questions as JevRequest['questions'],
+    ...(images.length
+      ? { assets: Object.fromEntries(images.map(({ id, asset }) => [id, asset])) }
+      : {}),
   };
+  if (new TextEncoder().encode(JSON.stringify(value)).length > 262_144)
+    return failure('请求总大小不能超过 256 KiB，请减少图片或文字');
+  return { ok: true, value };
 }

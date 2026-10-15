@@ -14,6 +14,8 @@ import { evaluateJev, type JevAnswer, type JevResponse } from './client';
 import { buildJevRequest, type StateMode } from './request';
 import { clearJevApiKey, readJevApiKey, writeJevApiKey } from './storage';
 
+import { readJevImages, type JevImage } from './images';
+
 const initialState = '客户说：支付集成已连续三天失败，请尽快协助。';
 const initialQuestions = JSON.stringify(
   {
@@ -214,7 +216,9 @@ export function JevTool() {
   const [result, setResult] = useState<JevResponse | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const request = buildJevRequest(stateInput, stateMode, questionsInput);
+  const [images, setImages] = useState<JevImage[]>([]);
+  const [readingImages, setReadingImages] = useState(false);
+  const request = buildJevRequest(stateInput, stateMode, questionsInput, images);
 
   const saveKey = () => {
     const value = keyInput.trim();
@@ -370,6 +374,69 @@ export function JevTool() {
                   spellCheck={false}
                 />
               </Field>
+            </div>
+            <div className="grid gap-3">
+              <Field
+                label="添加图片"
+                hint="实验功能：PNG / JPEG，最多 4 张，每张 64 KiB、合计 128 KiB。图片仅在本页内存中保存，调用时发送给 TypeSafe。"
+              >
+                <Input
+                  aria-label="添加图片"
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  multiple
+                  disabled={readingImages || busy}
+                  onChange={async (event) => {
+                    const files = Array.from(event.target.files ?? []);
+                    event.target.value = '';
+                    if (!files.length) return;
+                    setReadingImages(true);
+                    setError('');
+                    setResult(null);
+                    try {
+                      const added = await readJevImages(files, images);
+                      setImages((current) => [...current, ...added]);
+                    } catch (cause) {
+                      setError(cause instanceof Error ? cause.message : '图片读取失败');
+                    } finally {
+                      setReadingImages(false);
+                    }
+                  }}
+                />
+              </Field>
+              {images.length > 0 && (
+                <p className="text-muted-foreground text-xs">
+                  发送时 state 包含 content 原内容和 images 图片引用；问题可直接根据图片判断。
+                </p>
+              )}
+              <div className="flex flex-wrap gap-3">
+                {images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="border-border grid w-40 gap-2 rounded-xl border p-2"
+                  >
+                    <img
+                      src={`data:image/${image.asset.format};base64,${image.asset.data_base64}`}
+                      alt={image.name}
+                      className="h-24 w-full rounded object-contain"
+                    />
+                    <span className="truncate text-xs" title={image.name}>
+                      {image.name}
+                    </span>
+                    <SecondaryButton
+                      aria-label={`移除 ${image.name}`}
+                      disabled={busy}
+                      onClick={() => {
+                        setImages((current) => current.filter((item) => item.id !== image.id));
+                        setResult(null);
+                        setError('');
+                      }}
+                    >
+                      移除图片
+                    </SecondaryButton>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="border-border border-t pt-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -651,7 +718,7 @@ export function JevTool() {
                 onClick={() => {
                   void run();
                 }}
-                disabled={busy}
+                disabled={busy || readingImages}
               >
                 {busy ? '调用中…' : '调用 Jev'}
               </Button>

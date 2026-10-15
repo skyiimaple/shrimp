@@ -92,6 +92,7 @@ describe('Vercel Jev Function', () => {
       expect.objectContaining({ method: 'POST', redirect: 'manual' }),
     );
     expect(String(upstream.mock.calls[0][1]?.body)).not.toContain('secret-key');
+    expect(upstream.mock.calls[0][1]?.headers).not.toHaveProperty('TypeSafe-Danger-Zone-Images');
   });
 
   it('不把上游重定向或密钥泄漏给调用方', async () => {
@@ -103,4 +104,88 @@ describe('Vercel Jev Function', () => {
     expect(result.location).toBeUndefined();
     expect(result.body).not.toContain('secret-key');
   });
+});
+
+it('转发图片和实验头，拒绝未引用或无效 assets', async () => {
+  const upstream = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));
+  const payload = {
+    state: { image: 'image-uuid' },
+    questions: { a: { type: 'noul', instructions: 'cat?' } },
+    assets: { 'image-uuid': { type: 'image', format: 'png', data_base64: 'iVBORw0KGgo=' } },
+    endpoint: 'https://evil.example',
+  };
+  expect((await callFunction(JSON.stringify(payload), 'Bearer key')).status).toBe(200);
+  expect(upstream.mock.calls[0][0]).toBe('https://api.typesafe.ai/v1/systemone');
+  expect(upstream.mock.calls[0][1]?.headers).toMatchObject({
+    'TypeSafe-Danger-Zone-Images': 'true',
+  });
+  expect(JSON.parse(String(upstream.mock.calls[0][1]?.body)).assets).toEqual(payload.assets);
+  for (const invalid of [
+    { ...payload, state: 'unreferenced' },
+    { ...payload, assets: { 'image-uuid': { url: 'https://evil.example/image' } } },
+    {
+      ...payload,
+      assets: {
+        'image-uuid': { type: 'image', format: 'png', data_base64: 'data:image/png;base64,abc' },
+      },
+    },
+  ]) {
+    expect((await callFunction(JSON.stringify(invalid), 'Bearer key')).status).toBe(400);
+  }
+  expect(upstream).toHaveBeenCalledTimes(1);
+});
+
+it('图片仅在指令或 criteria 引用也可发送，拒绝仅出现在键中的引用', async () => {
+  const upstream = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));
+  const assets = { 'image-uuid': { type: 'image', format: 'png', data_base64: 'iVBORw0KGgo=' } };
+  for (const question of [
+    { type: 'noul', instructions: 'look at image-uuid now' },
+    { type: 'choice', instructions: 'match?', criteria: { yes: 'image-uuid', no: 'other' } },
+  ]) {
+    expect(
+      (
+        await callFunction(
+          JSON.stringify({ state: 'text', questions: { a: question }, assets }),
+          'Bearer key',
+        )
+      ).status,
+    ).toBe(200);
+  }
+  expect(
+    (
+      await callFunction(
+        JSON.stringify({
+          state: { 'image-uuid': 'x' },
+          questions: { a: { type: 'noul', instructions: 'look' } },
+          assets,
+        }),
+        'Bearer key',
+      )
+    ).status,
+  ).toBe(400);
+  expect(upstream).toHaveBeenCalledTimes(2);
+});
+it('图片超出总量、数量或请求大小时不发送上游', async () => {
+  const upstream = vi.spyOn(globalThis, 'fetch');
+  const bytes = Buffer.alloc(65536);
+  Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).copy(bytes);
+  const asset = { type: 'image', format: 'png', data_base64: bytes.toString('base64') };
+  const payload = {
+    state: 'a b c d e',
+    questions: { a: { type: 'noul', instructions: 'look' } },
+    assets: { a: asset, b: asset, c: { ...asset, data_base64: 'iVBORw0KGgo=' } },
+  };
+  expect((await callFunction(JSON.stringify(payload), 'Bearer key')).status).toBe(400);
+  expect(
+    (
+      await callFunction(
+        JSON.stringify({
+          ...payload,
+          assets: { a: asset, b: asset, c: asset, d: asset, e: asset },
+        }),
+        'Bearer key',
+      )
+    ).status,
+  ).toBe(413);
+  expect(upstream).not.toHaveBeenCalled();
 });

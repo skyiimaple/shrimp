@@ -56,12 +56,86 @@ export async function forwardJevRequest(
   const state = body.state;
   if (typeof state !== 'string' && (!state || typeof state !== 'object'))
     return result(400, 'state 格式无效');
+  if (isRequestTooLarge(body)) return result(413, '请求内容超过大小限制');
+  const assets = 'assets' in body ? body.assets : undefined;
+  let hasImages = false;
+  if (assets !== undefined) {
+    if (!assets || typeof assets !== 'object' || Array.isArray(assets))
+      return result(400, '图片 assets 格式无效');
+    const entries = Object.entries(assets);
+    if (entries.length > 4) return result(400, '最多添加 4 张图片');
+    const strings = (value: unknown): string[] =>
+      typeof value === 'string'
+        ? [value]
+        : value && typeof value === 'object'
+          ? Object.values(value).flatMap(strings)
+          : [];
+    const references = [
+      ...strings(state),
+      ...Object.values(body.questions).flatMap((question) =>
+        question && typeof question === 'object'
+          ? strings(
+              Object.fromEntries(
+                Object.entries(question).filter(
+                  ([key]) => key === 'instructions' || key === 'criteria',
+                ),
+              ),
+            )
+          : [],
+      ),
+    ];
+    let total = 0;
+    for (const [id, asset] of entries) {
+      if (
+        !id.trim() ||
+        !references.some((value) => value.includes(id)) ||
+        !asset ||
+        typeof asset !== 'object' ||
+        Array.isArray(asset)
+      )
+        return result(400, '图片引用无效');
+      const image = asset as Record<string, unknown>;
+      if (
+        Object.keys(image).some((key) => !['type', 'format', 'data_base64'].includes(key)) ||
+        image.type !== 'image' ||
+        !['png', 'jpg', 'jpeg'].includes(String(image.format)) ||
+        typeof image.data_base64 !== 'string' ||
+        !image.data_base64 ||
+        image.data_base64.length % 4 !== 0 ||
+        !/^[A-Za-z0-9+/]*={0,2}$/.test(image.data_base64)
+      )
+        return result(400, '图片格式无效');
+      const bytes = Buffer.from(image.data_base64, 'base64');
+      const signature =
+        image.format === 'png'
+          ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+          : bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255]));
+      total += bytes.length;
+      if (
+        !signature ||
+        bytes.toString('base64') !== image.data_base64 ||
+        bytes.length > 65_536 ||
+        total > 131_072
+      )
+        return result(400, '图片内容或大小无效');
+    }
+    hasImages = entries.length > 0;
+  }
   try {
     const upstream = await fetchUpstream(endpoint, {
       method: 'POST',
       redirect: 'manual',
-      headers: { Authorization: authorization, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'jev-latest', state, questions: body.questions }),
+      headers: {
+        Authorization: authorization,
+        'Content-Type': 'application/json',
+        ...(hasImages ? { 'TypeSafe-Danger-Zone-Images': 'true' } : {}),
+      },
+      body: JSON.stringify({
+        model: 'jev-latest',
+        state,
+        questions: body.questions,
+        ...(hasImages ? { assets } : {}),
+      }),
       signal: AbortSignal.timeout(20_000),
     });
     if (upstream.status >= 300 && upstream.status < 400)
