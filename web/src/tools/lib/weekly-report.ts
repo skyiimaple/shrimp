@@ -105,7 +105,15 @@ function versionSummary(items: WeeklyItem[]) {
   return `${modules}（${primaryStatus(items)}（${averageProcess(items)}），预计 ${sum(items, 'costPlan')} 人天，已投入 ${sum(items, 'costTotal')} 人天）`;
 }
 
-function weeklySummary(list: WeeklyItem[], selectedProducts: string[]) {
+function productTitle(product: string, productNames: Record<string, string>) {
+  return productNames[product] ?? productMap[product as keyof typeof productMap] ?? product;
+}
+
+function weeklySummary(
+  list: WeeklyItem[],
+  selectedProducts: string[],
+  productNames: Record<string, string>,
+) {
   let result = '本周总结：';
   const products = new Map<string, WeeklyItem[]>();
   for (const item of [...list].sort((left, right) => left.version.localeCompare(right.version))) {
@@ -113,7 +121,7 @@ function weeklySummary(list: WeeklyItem[], selectedProducts: string[]) {
     products.set(item.product, [...(products.get(item.product) ?? []), item]);
   }
   for (const [product, productItems] of products) {
-    result += `\n${product}（${productMap[product as keyof typeof productMap] ?? product}）：\n`;
+    result += `\n${product}（${productTitle(product, productNames)}）：\n`;
     const versions = new Map<string, WeeklyItem[]>();
     for (const item of productItems)
       versions.set(item.version, [...(versions.get(item.version) ?? []), item]);
@@ -132,6 +140,7 @@ export function generateWeeklyReport(
   list: WeeklyItem[],
   selectedProducts: string[],
   selectedMembers: string[],
+  productNames: Record<string, string> = {},
 ): Result<string> {
   if (!selectedProducts.length) return { ok: false, error: '请选择产品项目' };
   if (!selectedMembers.length) return { ok: false, error: '请添加并选择团队成员' };
@@ -143,11 +152,12 @@ export function generateWeeklyReport(
   let result = '';
   const selectedRows = list.filter((item) => selectedMembers.includes(item.person));
   if (selectedMembers.length > 1)
-    result += `----------\n业财前端部：\n${weeklySummary(selectedRows, selectedProducts)}\n`;
+    result += `----------\n业财前端部：\n${weeklySummary(selectedRows, selectedProducts, productNames)}\n`;
   for (const member of selectedMembers) {
     result += `\n----------\n${member}：\n${weeklySummary(
       list.filter((item) => item.person === member),
       selectedProducts,
+      productNames,
     )}\n`;
   }
   return { ok: true, value: result };

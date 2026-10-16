@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Copy, Plus, RotateCcw, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import {
   Button,
   Card,
@@ -15,16 +15,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/pop
 import { copyText } from '../../lib/utils';
 import { generateWeeklyReport, parseWeeklyRows, productMap } from '../lib/weekly-report';
 import { readWeeklyMembers, writeWeeklyMembers } from '../lib/weekly-members';
+import {
+  readWeeklyProjects,
+  writeWeeklyProjects,
+  type WeeklyProject,
+} from '../lib/weekly-projects';
 
 const productEntries = Object.entries(productMap);
+const builtinProductKeys = new Set(Object.keys(productMap));
+
+function loadCustomProjects() {
+  return readWeeklyProjects().filter((project) => !builtinProductKeys.has(project.key));
+}
 
 export function WeeklyReportTool() {
   const [memberDraft, setMemberDraft] = useState('');
   const [memberOptions, setMemberOptions] = useState<string[]>(() => readWeeklyMembers());
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>(() =>
-    productEntries.map(([key]) => key),
-  );
+  const [projectKeyDraft, setProjectKeyDraft] = useState('');
+  const [projectNameDraft, setProjectNameDraft] = useState('');
+  const [customProjects, setCustomProjects] = useState<WeeklyProject[]>(() => loadCustomProjects());
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(() => [
+    ...productEntries.map(([key]) => key),
+    ...loadCustomProjects().map((project) => project.key),
+  ]);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -54,6 +68,38 @@ export function WeeklyReportTool() {
         : [...current, product],
     );
 
+  const addProject = () => {
+    const key = projectKeyDraft.trim();
+    const name = projectNameDraft.trim();
+    if (!key || !name) {
+      setError('请填写项目代号和名称');
+      return;
+    }
+    if (builtinProductKeys.has(key) || customProjects.some((project) => project.key === key)) {
+      setError('项目代号已存在');
+      return;
+    }
+    const project = { key, name };
+    setCustomProjects((current) => {
+      const next = current.some((item) => item.key === key) ? current : [...current, project];
+      writeWeeklyProjects(next);
+      return next;
+    });
+    setSelectedProducts((current) => (current.includes(key) ? current : [...current, key]));
+    setProjectKeyDraft('');
+    setProjectNameDraft('');
+    setError('');
+  };
+
+  const removeProject = (key: string) => {
+    setCustomProjects((current) => {
+      const next = current.filter((project) => project.key !== key);
+      writeWeeklyProjects(next);
+      return next;
+    });
+    setSelectedProducts((current) => current.filter((item) => item !== key));
+  };
+
   const generate = () => {
     setOutput('');
     if (!selectedMembers.length) {
@@ -69,7 +115,12 @@ export function WeeklyReportTool() {
       setError(parsed.error);
       return;
     }
-    const report = generateWeeklyReport(parsed.value, selectedProducts, selectedMembers);
+    const report = generateWeeklyReport(
+      parsed.value,
+      selectedProducts,
+      selectedMembers,
+      Object.fromEntries(customProjects.map((project) => [project.key, project.name])),
+    );
     if (!report.ok) {
       setError(report.error);
       return;
@@ -89,11 +140,23 @@ export function WeeklyReportTool() {
 
   const reset = () => {
     setMemberDraft('');
+    setProjectKeyDraft('');
+    setProjectNameDraft('');
     setSelectedMembers([]);
-    setSelectedProducts(productEntries.map(([key]) => key));
+    setSelectedProducts([
+      ...productEntries.map(([key]) => key),
+      ...customProjects.map((project) => project.key),
+    ]);
     setInput('');
     setOutput('');
     setError('');
+  };
+
+  const addProjectOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addProject();
+    }
   };
 
   return (
@@ -191,6 +254,39 @@ export function WeeklyReportTool() {
           </div>
           <fieldset className="grid content-start gap-3">
             <legend className="mb-3 text-sm font-medium">产品项目</legend>
+            <div className="grid gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="weekly-project-key">项目代号</Label>
+                  <Input
+                    id="weekly-project-key"
+                    value={projectKeyDraft}
+                    onChange={(event) => setProjectKeyDraft(event.target.value)}
+                    onKeyDown={addProjectOnEnter}
+                    placeholder="与表格产品列一致"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="weekly-project-name">项目名称</Label>
+                  <Input
+                    id="weekly-project-name"
+                    value={projectNameDraft}
+                    onChange={(event) => setProjectNameDraft(event.target.value)}
+                    onKeyDown={addProjectOnEnter}
+                    placeholder="周报中显示的名称"
+                  />
+                </div>
+              </div>
+              <SecondaryButton
+                className="justify-self-start whitespace-nowrap"
+                type="button"
+                onClick={addProject}
+              >
+                <Plus size={16} />
+                添加项目
+              </SecondaryButton>
+              <p className="text-muted-foreground text-xs">代号需与表格产品列完全相同</p>
+            </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {productEntries.map(([key, name]) => (
                 <div
@@ -205,6 +301,34 @@ export function WeeklyReportTool() {
                   <Label htmlFor={`weekly-product-${key}`} className="cursor-pointer font-normal">
                     <b>{key}</b> · {name}
                   </Label>
+                </div>
+              ))}
+              {customProjects.map((project) => (
+                <div
+                  className="border-border bg-background flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm"
+                  key={project.key}
+                >
+                  <Checkbox
+                    id={`weekly-product-${project.key}`}
+                    checked={selectedProducts.includes(project.key)}
+                    onCheckedChange={() => toggleProduct(project.key)}
+                  />
+                  <Label
+                    htmlFor={`weekly-product-${project.key}`}
+                    className="min-w-0 flex-1 cursor-pointer font-normal break-all"
+                  >
+                    <b>{project.key}</b> · {project.name}
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 min-h-0 shrink-0 p-0"
+                    type="button"
+                    aria-label={`删除项目 ${project.key}`}
+                    onClick={() => removeProject(project.key)}
+                  >
+                    <X size={14} />
+                  </Button>
                 </div>
               ))}
             </div>

@@ -74,6 +74,23 @@ describe('周报生成', () => {
     expect(result.value).not.toContain('重构结算页');
   });
 
+  it('自定义项目使用传入名称，未知项目回退为代号', () => {
+    const custom =
+      'OPS\t1.0.0\t2026-10-16\t监控\t上线告警\t张三\t1\t1\t80%\t进行中\t及时发现故障\t';
+    const unnamed = 'RAW\t1.0.0\t2026-10-16\t模块\t未登记任务\t张三\t1\t1\t10%\t进行中\t补齐名称\t';
+    const parsed = parseWeeklyRows(`${zhang}\n${custom}\n${unnamed}`);
+    if (!parsed.ok) throw new Error(parsed.error);
+    const result = generateWeeklyReport(parsed.value, ['CRM', 'OPS', 'RAW'], ['张三'], {
+      OPS: '运维平台',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value).toContain('CRM（慧算账运营平台）：');
+    expect(result.value).toContain('OPS（运维平台）：');
+    expect(result.value).toContain('上线告警：进行中（80%）');
+    expect(result.value).toContain('RAW（RAW）：');
+  });
+
   it('要求至少选择一个产品和成员', () => {
     expect(generateWeeklyReport([], [], ['张三'])).toEqual({ ok: false, error: '请选择产品项目' });
     expect(generateWeeklyReport([], ['CRM'], [])).toEqual({
